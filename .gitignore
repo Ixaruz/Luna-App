@@ -1,0 +1,16 @@
+.vs/
+.vscode/
+build/
+libs/libnx/
+
+*.nro
+*.nso
+*.nsp
+*.nacp
+*.lst
+*.elf
+
+*.bat
+*.exe
+
+*.psd
