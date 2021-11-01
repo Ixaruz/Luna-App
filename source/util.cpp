@@ -89,16 +89,22 @@ std::string util::getIslandNameASCII(u64 playerAddr)
 	//0x16 byte = 0xB wide-chars/uint_16
 	u16 name[0xB] = { 0 };
 	u16 namechar;
+	u8 lastchar = 0;
 
 	for (u8 i = 0; i < 0xB; i++) {
 		dmntchtReadCheatProcessMemory(playerAddr + PersonalID + 0x4 + (i * 0x2), &namechar, 0x2);
 		//make sure we can use this fuck string in a path
 		if (isASCII(namechar) && !isVerboten(namechar)) {
 			name[i] = namechar;
+			lastchar = i;
 		}
 		else {
 			name[i] = 0x0000;
 		}
+	}
+	//make sure there is no space on path ends
+	if (name[lastchar] == 0x20) {
+		name[lastchar] = 0x0000;
 	}
 	//nullterminator pain
 	u8 name_string[0x16] = { 0 };
@@ -170,7 +176,7 @@ u64 util::FollowPointerMain(u64 pointer, ...)
 #if DEBUG
 	Result rc = 0;
 	if (R_FAILED(rc = dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize))) {
-		printf("Memory Read failed. (expected)\n");
+		printf("Memory Read failed.\n");
 	}
 #else
 	dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize); // since the inital pointer will be a valid offset(we assume anyways...) do a read64 call to it and store in offset

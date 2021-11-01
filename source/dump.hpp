@@ -461,9 +461,9 @@ namespace Dump {
 				if (g_bufferSize > playerSize - offset)
 					g_bufferSize = playerSize - offset;
 
-				printf("2progress: %.2F\n", *g_progress_percent);
-				if(getPlayerNumber() != 0) setProgress(progress + (0.2f * (float)offset / playerSize) / getPlayerNumber());
-				printf("1progress: %.2F\n", *g_progress_percent);
+				//printf("2progress: %.2F\n", *g_progress_percent);
+				//if(getPlayerNumber() != 0) setProgress(progress + (0.2f * (float)offset + g_bufferSize / playerSize) / getPlayerNumber());
+				//printf("1progress: %.2F\n", *g_progress_percent);
 
 				dmntchtReadCheatProcessMemory(g_playerAddr + offset + (i * playersOffset), g_buffer, g_bufferSize);
 				fsFileWrite(&pd, SaveHeaderSize + offset, g_buffer, g_bufferSize, FsWriteOption_Flush);

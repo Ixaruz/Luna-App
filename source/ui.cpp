@@ -71,6 +71,8 @@ namespace dbk {
         bool g_initialized = false;
         bool g_exit_requested = false;
 
+        bool g_editinglog = false;
+
         PadState g_pad;
 
         u32 g_prev_touch_count = -1;
@@ -452,7 +454,7 @@ namespace dbk {
     }
 
     void ErrorNoTemplate() {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "No template was found."));
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "No valid template was found."));
     }
 
     void ErrorMissingFiles() {
@@ -470,7 +472,6 @@ namespace dbk {
 
     void MainMenu::gotoNextMenu() {
 #if !DEBUG_UI
-
         u32 dreamstrval;
         u16 IsDreamingBed = 0;
         //[[[main+3DFE1D8]+10]+130]+60
@@ -486,6 +487,7 @@ namespace dbk {
         }
         
         if (mainAddr == 0x60) {
+            printf("Error: mainAddr");
             ErrorSimpCheck();
             return;
         }
@@ -494,6 +496,7 @@ namespace dbk {
         dmntchtReadCheatProcessMemory(mainAddr + EventFlagOffset + (346 * 2), &IsDreamingBed, sizeof(u16));
 
         if (dreamstrval == 0x0 /*|| IsDreamingBed == 0x0*/) {
+            printf("Error: NoDream");
             ErrorSimpCheck();
             return;
         }
@@ -521,7 +524,6 @@ namespace dbk {
         }
         */
 
-        dmntchtForceOpenCheatProcess();
         DmntCheatProcessMetadata metadata;
         dmntchtGetCheatProcessMetadata(&metadata);
         memcpy(&bid, metadata.main_nso_build_id, 0x8);
@@ -691,27 +693,32 @@ namespace dbk {
     }
 
     void DumpingMenu::LogAddLine(std::string text, bool scroll, TextStyle style) {
-       
+        g_editinglog = true;
         for (size_t i = 0; i <= text.size(); i += g_maxloglength) {
             std::string substringtext = text.substr(i, g_maxloglength);
             LogEntry* newLogEntry = new LogEntry(substringtext, style);
             this->m_log_entries.push_back(newLogEntry);
         }
         this->m_scrolling = scroll;
+        g_editinglog = false;
     }
 
     /* horrible memory usage, try to use this as little as possible */
     void DumpingMenu::LogEditElement(std::string oldtext, std::string newtext) {
+        g_editinglog = true;
         for (auto elm : this->m_log_entries) {
             if (elm->getText() == oldtext) {
                 elm->setText(newtext);
             }
         }
+        g_editinglog = false;
     }
 
     void DumpingMenu::LogEditLastElement(std::string text) {
+        g_editinglog = true;
         std::string substringtext = text.substr(0, g_maxloglength);
         this->m_log_entries[this->m_log_entries.size() - 1]->setText(substringtext);
+        g_editinglog = false;
     }
 
     Result DumpingMenu::TransitionDumpState() {
@@ -791,10 +798,11 @@ namespace dbk {
             }
             this->m_offset += (this->m_nextOffset - this->m_offset) * this->m_speed;
         }
-
-        for (u8 i = 0; i < this->m_log_entries.size(); i++) {
-            float y = (20.0f + 6.0f) * i;
-            this->m_log_entries[i]->setProperties(this->getLeftBound(), this->getTopBound() - this->m_offset + y, this->getRightBound() - this->getLeftBound());
+        if (!g_editinglog) {
+            for (u8 i = 0; i < this->m_log_entries.size(); i++) {
+                float y = (20.0f + 6.0f) * i;
+                this->m_log_entries[i]->setProperties(this->getLeftBound(), this->getTopBound() - this->m_offset + y, this->getRightBound() - this->getLeftBound());
+            }
         }
 
         u64 k_down = padGetButtonsDown(&g_pad);
@@ -825,10 +833,11 @@ namespace dbk {
         nvgScissor(vg, x + HorizontalInset, y + TitleGap + ProgressTextHeight + ProgressBarHeight + VerticalGap + LogPadding, WindowWidth - HorizontalInset * 2.0f, TextAreaHeight);
 
 
-
-        for (u32 i = 0; i < m_log_entries.size(); i++) {
-            if (this->m_log_entries[i]->IsEntryInBounds(this->getTopBound() - this->LogRowHeight, this->getBottomBound() - this->LogRowHorizontalInset)) {
-                m_log_entries[i]->Draw(vg);
+        if (!g_editinglog) {
+            for (u32 i = 0; i < m_log_entries.size(); i++) {
+                if (this->m_log_entries[i]->IsEntryInBounds(this->getTopBound() - this->LogRowHeight, this->getBottomBound() - this->LogRowHorizontalInset)) {
+                    m_log_entries[i]->Draw(vg);
+                }
             }
         }
 
@@ -903,6 +912,8 @@ namespace dbk {
 
         /* Mark as initialized. */
         g_initialized = true;
+
+        dmntchtForceOpenCheatProcess();
 
         //[[[[main+3DFE1D8]+10]+140]+08]
         u64 playerAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);

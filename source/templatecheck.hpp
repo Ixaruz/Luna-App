@@ -125,8 +125,10 @@ Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = 
         chkres.check_result = CheckResult::MissingFiles;
     }
     for (u8 i = 0; i < 8; i++) {
-        printf("missing personal.dat\n");
-        if(players[i] != personalfound[i]) chkres.check_result = CheckResult::MissingFiles;
+        if (players[i] != personalfound[i]) {
+            printf("missing personal.dat\n");
+            chkres.check_result = CheckResult::MissingFiles;
+        }
     }
     if (((listcount - maskeditemscount) % 2) == 1) {
         printf("missing headerfiles (uneven number of files)\n");
