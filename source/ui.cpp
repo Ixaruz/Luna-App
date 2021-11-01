@@ -25,6 +25,7 @@
 #include "ui.hpp"
 #include "dump.hpp"
 #include "assert.hpp"
+#include "templatecheck.hpp"
 
 namespace dbk {
 
@@ -436,8 +437,67 @@ namespace dbk {
         }
     }
 
+    void ErrorOpenACNH(u64* tid) {
+        const char* ret = "Please open ACNH!";
+#if DEBUG
+        const char* formatter = "current TID: 0x%016lX";
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, *tid));
+#else
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
+#endif
+    }
+
+    void ErrorSimpCheck() {
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE008", "You didnt pass", "the simp check.", 1));
+    }
+
+    void ErrorNoTemplate() {
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "No template was found."));
+    }
+
+    void ErrorMissingFiles() {
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "You seem to be missing template files."));
+    }
+
+    void ErrorWrongRevision(std::string info) {
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Wrong template-save revision.", info.c_str(), 1));
+    }
+
+    void ErrorNotEnoughPlayers(std::string info) {
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Template is lacking:", std::string("Villager" + info).c_str(), 1));
+    }
+
+
     void MainMenu::gotoNextMenu() {
 #if !DEBUG_UI
+
+        u32 dreamstrval;
+        u16 IsDreamingBed = 0;
+        //[[[main+3DFE1D8]+10]+130]+60
+        u64 mainAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x130, 0xFFFFFFFFFFFFFFFF) + 0x60;
+        
+        Check chkres = CheckTemplateFiles(std::string(LUNA_TEMPLATE_DIR), mainAddr);
+        if (chkres.check_result != CheckResult::Success) {
+            if (chkres.check_result == CheckResult::NoTemplate) ErrorNoTemplate();
+            if (chkres.check_result == CheckResult::MissingFiles) ErrorMissingFiles();
+            if (chkres.check_result == CheckResult::WrongRevision) ErrorWrongRevision(chkres.additional_info);
+            if (chkres.check_result == CheckResult::NotEnoughPlayers) ErrorNotEnoughPlayers(chkres.additional_info);
+            return;
+        }
+        
+        if (mainAddr == 0x60) {
+            ErrorSimpCheck();
+            return;
+        }
+
+        dmntchtReadCheatProcessMemory(mainAddr, &dreamstrval, sizeof(u32));
+        dmntchtReadCheatProcessMemory(mainAddr + EventFlagOffset + (346 * 2), &IsDreamingBed, sizeof(u16));
+
+        if (dreamstrval == 0x0 /*|| IsDreamingBed == 0x0*/) {
+            ErrorSimpCheck();
+            return;
+        }
+
         /*perform all the checks*/
         u64 tid = 0, bid = 0, pid = 0;
         pmdmntGetApplicationProcessId(&pid);
@@ -494,22 +554,7 @@ namespace dbk {
 #endif
         */
 
-        u32 dreamstrval;
-        u16 IsDreamingBed = 0;
-        //[[[main+3DFE1D8]+10]+130]+60
-        u64 mainAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x130, 0xFFFFFFFFFFFFFFFF) + 0x60;
-        if (mainAddr == 0x60) {
-            ErrorSimpCheck();
-            return;
-        }
 
-        dmntchtReadCheatProcessMemory(mainAddr, &dreamstrval, sizeof(u32));
-        dmntchtReadCheatProcessMemory(mainAddr + EventFlagOffset + (346 * 2), &IsDreamingBed, sizeof(u16));
-
-        if (dreamstrval == 0x0 /*|| IsDreamingBed == 0x0*/) {
-            ErrorSimpCheck();
-            return;
-        }
 #endif
 
         g_dumping_menu = std::make_shared<DumpingMenu>(g_current_menu);
@@ -809,20 +854,6 @@ namespace dbk {
         }
     }
 
-    void ErrorOpenACNH(u64 *tid) {
-        const char *ret = "Please open ACNH!";
-#if DEBUG
-        const char *formatter = "current TID: 0x%016lX";
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, *tid));
-#else
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
-#endif
-    }
-
-    void ErrorSimpCheck() {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE008", "you didnt pass", "the simp check.", 1));
-    }
-
     void StarRandomizer() {
 
         g_starmarginwidth = (((float)g_screen_width - (VerticalGap * 4.0f)) / (g_starcount / 2));
@@ -877,8 +908,9 @@ namespace dbk {
         u64 playerAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 
         /* Change the current menu to the main menu and if there is an island name representable, put it on the dump button. */
-        ChangeMenu(std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str()));
-
+        g_current_menu = std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str());
+        //ChangeMenu(std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str()));
+        
         return true;
     }
 
@@ -888,8 +920,6 @@ namespace dbk {
         UpdateInput();
         g_current_menu->Update(ns);
     }
-
-
 
     void RenderMenu(NVGcontext* vg, u64 ns) {
         DBK_ABORT_UNLESS(g_initialized);
