@@ -1,9 +1,11 @@
 #pragma once
 #include <string>
 #include <cstring>
+#include <vector>
 #include <cstdio>
 #include <cstdarg>		//va_list and stuff
 #include <cstdlib>
+#include <sys/stat.h>
 #include "helpers\dmnt\dmntcht.h"
 #include "helpers\debugger\debugger.hpp"
 #include <switch.h>
@@ -38,6 +40,25 @@ extern const u64 ExpandBaggageOffset;
 extern const u64 houseSize;
 extern const u64 houseLvlOffset;
 extern const u64 EventFlagOffset;
+
+extern const u32 REV_1110_MAIN_SIZE;
+extern const u32 REV_1110_PERSONAL_SIZE;
+
+class FileHashRegion
+{
+public:
+    u32 HashOffset;
+    u32 Size;
+    u32 getBeginOffset() const { return HashOffset + 4; }
+    u32 getEndOffset() const { return getBeginOffset() + Size; }
+
+    FileHashRegion(u32 hashOfs, u32 size) : HashOffset(hashOfs), Size(size)
+    {}
+};
+
+extern const std::vector<FileHashRegion*> REV_1110_MAIN;
+extern const std::vector<FileHashRegion*> REV_1110_PERSONAL;
+
 
 struct IslandName {
     u16 name[0xB];

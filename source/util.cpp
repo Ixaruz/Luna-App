@@ -28,6 +28,42 @@ extern const u64 houseSize = 0x26400;
 extern const u64 houseLvlOffset = 0x308be4; //changed in 1.10.0
 extern const u64 EventFlagOffset = 0x22d9b8; //changed in 1.10.0
 
+
+/*hashes*/
+
+extern const u32 REV_1110_MAIN_SIZE = 0x86D570;
+extern const u32 REV_1110_PERSONAL_SIZE = 0x64160;
+
+extern const std::vector<FileHashRegion*> REV_1110_MAIN = std::vector<FileHashRegion*> {
+		new FileHashRegion(0x000110, 0x1e216c),
+		new FileHashRegion(0x1e2280, 0x34582c),
+		new FileHashRegion(0x527bc0, 0x03693c),
+		new FileHashRegion(0x55e500, 0x02d70c),
+		new FileHashRegion(0x58bd20, 0x03693c),
+		new FileHashRegion(0x5c2660, 0x02d70c),
+		new FileHashRegion(0x5efe80, 0x03693c),
+		new FileHashRegion(0x6267c0, 0x02d70c),
+		new FileHashRegion(0x653fe0, 0x03693c),
+		new FileHashRegion(0x68a920, 0x02d70c),
+		new FileHashRegion(0x6b8140, 0x03693c),
+		new FileHashRegion(0x6eea80, 0x02d70c),
+		new FileHashRegion(0x71c2a0, 0x03693c),
+		new FileHashRegion(0x752be0, 0x02d70c),
+		new FileHashRegion(0x780400, 0x03693c),
+		new FileHashRegion(0x7b6d40, 0x02d70c),
+		new FileHashRegion(0x7e4560, 0x03693c),
+		new FileHashRegion(0x81aea0, 0x02d70c),
+		new FileHashRegion(0x8485b0, 0x024fbc),
+};
+
+extern const std::vector<FileHashRegion*> REV_1110_PERSONAL = std::vector<FileHashRegion*> {
+		new FileHashRegion(0x00110, 0x3693c),
+		new FileHashRegion(0x36a50, 0x2d70c),
+};
+
+
+
+
 static const char verboten[] = { ',', '/', '\\', '<', '>', ':', '"', '|', '?', '*', '™', '©', '®' };
 
 

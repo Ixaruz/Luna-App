@@ -2,6 +2,7 @@
 #include "util.h"
 #include "helpers\file\file.h"
 #include <SaveCrypto.hpp>
+#include <MurmurHash3.hpp>
 #include "luna.h"
 #include "ui.hpp"
 
@@ -67,7 +68,7 @@ namespace Dump {
 		}
 	}
 
-	void DecryptPair(const std::string& dataPathIn, const std::string& dataPathOut) {
+	void DecryptPair(const std::string &dataPathIn, const std::string &dataPathOut) {
 		FsFile hd;
 		FsFile md;
 		static char path[FS_MAX_PATH];
@@ -116,7 +117,7 @@ namespace Dump {
 		delete encData;
 	}
 
-	void EncryptPair(const std::string& dataPathIn, const std::string& dataPathOut) {
+	void EncryptPair(const std::string &dataPathIn, const std::string &dataPathOut) {
 		FsFile md;
 		static char path[FS_MAX_PATH];
 		//clear our path buffer or bad things will happen
@@ -164,7 +165,44 @@ namespace Dump {
 		delete encData;
 	}
 
-	void handleDecryption(const std::string& in, const std::string& out) {
+	void Hash(const std::string& dataPathIn) {
+		
+		size_t slPos = dataPathIn.find_last_of('/');
+		std::string fileName = dataPathIn.substr(slPos + 1, std::string::npos);
+
+		//the files we edited
+		if (fileName != "main.dat" && fileName != "personal.dat") return;
+
+		FsFile md;
+		static char path[FS_MAX_PATH];
+		//clear our path buffer or bad things will happen
+		memset(path, 0, FS_MAX_PATH);
+		std::snprintf(path, FS_MAX_PATH, dataPathIn.c_str());
+		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Read | FsOpenMode_Write, &md);
+		s64 datasize = 0;
+		fsFileGetSize(&md, &datasize);
+		u8* Data = new u8[datasize];
+		u64 bytesread = 0;
+
+		fsFileRead(&md, 0, Data, datasize, FsReadOption_None, &bytesread);
+		
+		if (fileName == "main.dat") {
+			for (auto& h : REV_1110_MAIN) {
+				MurmurHash3::Update(Data, h->HashOffset, h->getBeginOffset(), h->Size);
+			}
+		}
+
+		if (fileName == "personal.dat") {
+			for (auto& h : REV_1110_PERSONAL) {
+				MurmurHash3::Update(Data, h->HashOffset, h->getBeginOffset(), h->Size);
+			}
+		}
+
+		fsFileWrite(&md, 0, Data, datasize, FsWriteOption_Flush);
+		fsFileClose(&md);
+	}
+
+	void handleDecryption(const std::string &in, const std::string &out) {
 		fs::dirList list(in);
 		unsigned int listcount = list.getCount();
 		for (unsigned int i = 0; i < listcount; i++)
@@ -198,7 +236,7 @@ namespace Dump {
 		}
 	}
 
-	void handleEncryption( const std::string& in, const std::string& out) {
+	void handleEncryption( const std::string &in, const std::string &out) {
 		fs::dirList list(in);
 		unsigned int listcount = list.getCount();
 		for (unsigned int i = 0; i < listcount; i++)
@@ -226,16 +264,13 @@ namespace Dump {
 				std::string dataPathIn = in + list.getItem(i);
 				std::string dataPathOut = out + list.getItem(i);
 				if (!(getFilename(dataPathIn).find("Header") != std::string::npos)) {
+					Hash(dataPathIn);
 					EncryptPair(dataPathIn, dataPathOut);
 				}
 			}
 		}
 	}
 
-	void enableButton() {
-		*g_enable_buttons = true;
-		*g_dumping_state = dbk::DumpingMenu::DumpState::End;
-	}
 
 	void addProgress(float progress) {
 		*g_progress_percent = g_progress_percent_last_function + progress;
@@ -245,6 +280,13 @@ namespace Dump {
 	void setProgress(float progress) {
 		*g_progress_percent = progress;
 		g_progress_percent_last_function = *g_progress_percent;
+	}
+
+
+	void enableButton() {
+		*g_enable_buttons = true;
+		setProgress(1.0f);
+		*g_dumping_state = dbk::DumpingMenu::DumpState::End;
 	}
 
 	void checkPlayers() {
@@ -288,11 +330,7 @@ namespace Dump {
 		g_enable_buttons = enable_buttons;
 		g_dumping_state = dumping_state;
 
-
-		fsdevMountSdmc();
 		fsOpenSdCardFileSystem(&g_fsSdmc);
-		g_dumping_menu->LogAddLine("Attached SD card");
-		printf("attached SD card\n");
 		addProgress(0.02f);
 		printf("progress: %.2F\n", *g_progress_percent);
 		//[[[main+3DFE1D8]+10]+130]+60
@@ -340,7 +378,7 @@ namespace Dump {
 #else
 		enableButton();
 #endif
-		addProgress(0.1f);
+		addProgress(0.08f);
 
 	}
 
@@ -371,6 +409,7 @@ namespace Dump {
 		//reset size in-case it got changed in the latter for loop
 		g_bufferSize = BUFF_SIZE;
 		float progress = g_progress_percent_last_function;
+		printf("1progress: %.2F\n", *g_progress_percent);
 		g_dumping_menu->LogAddLine("Copying island...");
 		for (u64 offset = 0; offset < mainSize; offset += g_bufferSize) {
 			if (g_bufferSize > mainSize - offset)
@@ -384,9 +423,6 @@ namespace Dump {
 		g_dumping_menu->LogEditLastElement("Copying island: successful");
 		printf("wrote main.dat\n");
 		fsFileClose(&md);
-		printf("1progress: %.2F\n", *g_progress_percent);
-		setProgress(progress + 0.2f);
-		printf("2progress: %.2F\n", *g_progress_percent);
 
 		/* LANDNAME */
 		FsFile ld;
@@ -406,7 +442,7 @@ namespace Dump {
 		FsFile pd;
 
 		g_dumping_menu->LogAddLine("Players to be copied: " + std::to_string(getPlayerNumber()));
-
+		progress = g_progress_percent_last_function;
 		for (u8 i = 0; i < 8; i++) {
 			/* If there is no player, dont even bother */
 			if (!g_players[i]) continue;
@@ -420,7 +456,6 @@ namespace Dump {
 
 			//reset size in-case it got changed in the latter for loop
 			g_bufferSize = BUFF_SIZE;
-			progress = g_progress_percent_last_function;
 			g_dumping_menu->LogAddLine("Copying player " + std::to_string(i + 1) + "...");
 			for (u64 offset = 0; offset < playerSize; offset += g_bufferSize) {
 				if (g_bufferSize > playerSize - offset)
@@ -437,6 +472,7 @@ namespace Dump {
 			printf("wrote personal.dat\n");
 			fsFileClose(&pd);
 		}
+		setProgress(progress + 0.2f);
 
 #if !DEBUG_UI
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsFix;
@@ -676,14 +712,11 @@ namespace Dump {
 	}
 
 	void Save() {
-		g_dumping_menu->LogAddLine("Encrypting save files...");
+		g_dumping_menu->LogAddLine("Hashing and encrypting save files...");
 		//this shouldnt be an issue, since the directory lists only get fetched once at the start
 		handleEncryption(g_pathOut, g_pathOut);
-		g_dumping_menu->LogEditLastElement("Encrypting save files: successful");
+		g_dumping_menu->LogEditLastElement("Hashing and encrypting save files: successful");
 		fsFsClose(&g_fsSdmc);
-		fsdevUnmountDevice("sdmc");
-		g_dumping_menu->LogAddLine("Detached SD card");
-		setProgress(1.0f);
 		delete g_AccountTableBuffer;
 		delete g_buffer;
 		enableButton();
