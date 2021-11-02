@@ -117,7 +117,7 @@ namespace Dump {
 		delete encData;
 	}
 
-	void EncryptPair(const std::string &dataPathIn, const std::string &dataPathOut) {
+	void EncryptPair(const std::string &dataPathIn, const std::string &dataPathOut, u32 tick) {
 		FsFile md;
 		static char path[FS_MAX_PATH];
 		//clear our path buffer or bad things will happen
@@ -140,7 +140,7 @@ namespace Dump {
 		memcpy(&headerData, encData, sizeof(headerData) - sizeof(headerData.headerCrypto));
 		std::string headerPathOut = dataPathOut.substr(0, dataPathOut.find_last_of('.')) + "Header.dat";
 
-		SaveCrypto::RegenHeaderCrypto(headerData);
+		SaveCrypto::RegenHeaderCrypto(headerData, tick);
 		SaveCrypto::Crypt(headerData, encData, datasize);
 
 		FsFile newmd;
@@ -236,7 +236,7 @@ namespace Dump {
 		}
 	}
 
-	void handleEncryption( const std::string &in, const std::string &out) {
+	void handleEncryption( const std::string &in, const std::string &out, u32 tick) {
 		fs::dirList list(in);
 		unsigned int listcount = list.getCount();
 		for (unsigned int i = 0; i < listcount; i++)
@@ -250,7 +250,7 @@ namespace Dump {
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
 				mkdir(newOut.substr(0, newOut.length() - 1).c_str(), 0777);
-				handleEncryption(newIn, newOut);
+				handleEncryption(newIn, newOut, tick);
 			}
 			//skip over landname.dat
 			else if (list.getItem(i) == "landname.dat") {
@@ -265,7 +265,7 @@ namespace Dump {
 				std::string dataPathOut = out + list.getItem(i);
 				if (!(getFilename(dataPathIn).find("Header") != std::string::npos)) {
 					Hash(dataPathIn);
-					EncryptPair(dataPathIn, dataPathOut);
+					EncryptPair(dataPathIn, dataPathOut, tick);
 				}
 			}
 		}
@@ -713,8 +713,10 @@ namespace Dump {
 
 	void Save() {
 		g_dumping_menu->LogAddLine("Hashing and encrypting save files...");
+		//grabbing tick once, because else the Random::init() function would run for each file and i tink they all need to have the same tick?
+		u32 currenttick = static_cast<u32>(svcGetSystemTick());
 		//this shouldnt be an issue, since the directory lists only get fetched once at the start
-		handleEncryption(g_pathOut, g_pathOut);
+		handleEncryption(g_pathOut, g_pathOut, currenttick);
 		g_dumping_menu->LogEditLastElement("Hashing and encrypting save files: successful");
 		fsFsClose(&g_fsSdmc);
 		delete g_AccountTableBuffer;
