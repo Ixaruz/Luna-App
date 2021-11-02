@@ -439,11 +439,21 @@ namespace dbk {
         }
     }
 
-    void ErrorOpenACNH(u64* tid) {
+    void ErrorOpenACNH(u64 *tid) {
         const char* ret = "Please open ACNH!";
 #if DEBUG
         const char* formatter = "current TID: 0x%016lX";
         ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, *tid));
+#else
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
+#endif
+    }
+
+    void ErrorWrongBID(u64 *bid) {
+        const char* ret = "Please update ACNH to the latest version!";
+#if DEBUG
+        const char* formatter = "current BID: 0x%016lX";
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, *bid));
 #else
         ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
 #endif
@@ -469,9 +479,9 @@ namespace dbk {
         ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Template is lacking:", std::string("Villager" + info).c_str(), 1));
     }
 
-
     void MainMenu::gotoNextMenu() {
 #if !DEBUG_UI
+
         u32 dreamstrval;
         u16 IsDreamingBed = 0;
         //[[[main+3DFE1D8]+10]+130]+60
@@ -486,22 +496,7 @@ namespace dbk {
             return;
         }
         
-        if (mainAddr == 0x60) {
-            printf("Error: mainAddr");
-            ErrorSimpCheck();
-            return;
-        }
-
-        dmntchtReadCheatProcessMemory(mainAddr, &dreamstrval, sizeof(u32));
-        dmntchtReadCheatProcessMemory(mainAddr + EventFlagOffset + (346 * 2), &IsDreamingBed, sizeof(u16));
-
-        if (dreamstrval == 0x0 /*|| IsDreamingBed == 0x0*/) {
-            printf("Error: NoDream");
-            ErrorSimpCheck();
-            return;
-        }
-
-        /*perform all the checks*/
+        /*perform all the other checks after validating the Template*/
         u64 tid = 0, bid = 0, pid = 0;
         pmdmntGetApplicationProcessId(&pid);
         pminfoGetProgramId(&tid, pid);
@@ -509,20 +504,6 @@ namespace dbk {
             ErrorOpenACNH(&tid);
             return;
         }
-        /*
-        else {
-            if (R_FAILED(rc = dmntchtForceOpenCheatProcess())) {
-                const char* ret = "Couldn't attach to title!";
-#if DEBUG
-                const char* formatter = "current TID: 0x%016lX";
-                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, tid));
-#else
-                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
-#endif
-                return false;
-            }
-        }
-        */
 
         DmntCheatProcessMetadata metadata;
         dmntchtGetCheatProcessMetadata(&metadata);
@@ -537,25 +518,25 @@ namespace dbk {
             return;
         }
 
-        /*
-#if DEBUG
-        char result_text[0x40];
-        u64 buff = 0;
-        //l_debugger->queryMemory(metadata.main_nso_extents.base);
+        if (bid != BID && bid != BID_LAST) {
+            ErrorWrongBID(&bid);
+            return;
+        }
 
-        //snprintf(result_text, sizeof(result_text), util::isServiceRunning("dmnt:cht") ? "dmnt:cht running : true" : "dmnt:cht running : false", 0);
-        //snprintf(result_text, sizeof(result_text), "syscall Result : 0x%08X", envIsSyscallHinted(0x60));
-        //snprintf(result_text, sizeof(result_text), "query permissions : 0x%X", l_debugger->queryMemory(metadata.main_nso_extents.base).perm);
-        //snprintf(result_text, sizeof(result_text), "attach Result : 0x%08X", l_debugger->attachToProcess());
-        snprintf(result_text, sizeof(result_text), "Testread Result : 0x%08X", dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base, &buff, sizeof(u64)));
-        //snprintf(result_text, sizeof(result_text), "Testread Result : 0x%08X", l_debugger->readMemory(&buff, sizeof(u64), metadata.main_nso_extents.base + 0x3DFE1D8));
-        //l_debugger->readMemory(&buff, sizeof(buff), metadata.main_nso_extents.base);
-        //snprintf(result_text, sizeof(result_text), "Testread Result : 0x%016lX", buff);
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", result_text, "MAIN : 0x%010lX", metadata.main_nso_extents.base));
-        return false;
-#endif
-        */
+        if (mainAddr == 0x60) {
+            printf("Error: mainAddr");
+            ErrorSimpCheck();
+            return;
+        }
 
+        dmntchtReadCheatProcessMemory(mainAddr, &dreamstrval, sizeof(u32));
+        dmntchtReadCheatProcessMemory(mainAddr + EventFlagOffset + (346 * 2), &IsDreamingBed, sizeof(u16));
+
+        if (dreamstrval == 0x0 || IsDreamingBed == 0x0) {
+            printf("Error: NoDream");
+            ErrorSimpCheck();
+            return;
+        }
 
 #endif
 
@@ -605,7 +586,7 @@ namespace dbk {
     }
 
     void MainMenu::Draw(NVGcontext *vg, u64 ns) {
-        DrawWindow(vg, "Luna", g_screen_width / 2.0f - WindowWidth / 2.0f, g_screen_height / 2.0f - WindowHeight / 2.0f, WindowWidth, WindowHeight);
+        DrawWindow(vg, (std::string("Luna ") + std::string(STRING_VERSION)).c_str(), g_screen_width / 2.0f - WindowWidth / 2.0f, g_screen_height / 2.0f - WindowHeight / 2.0f, WindowWidth, WindowHeight);
         this->DrawButtons(vg, ns);
     }
 
@@ -946,7 +927,7 @@ namespace dbk {
         }
 
 
-#if DEBUG
+#if DEBUG_OV
         //Draw frametime
         if (g_last_ft3 != 0) {
             char meta[100];

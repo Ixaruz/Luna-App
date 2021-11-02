@@ -24,7 +24,9 @@
 #define TOSTRING(x)							STRINGIFY(x)
 #define STRING_VERSION						"" TOSTRING(MAJOR_VERSION) "." TOSTRING(MINOR_VERSION) "." TOSTRING(REVISION_VERSION) ""
 
+//print extra debug log
 #define DEBUG								0
-#define DEBUG_FS							0
-#define DEBUG_FC							0
+//disable game and template checks
 #define DEBUG_UI							0
+//draw debug statistics
+#define DEBUG_OV							0
