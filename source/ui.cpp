@@ -31,6 +31,9 @@ namespace dbk {
 
     namespace {
 
+        static constexpr float ImageInset = 40.0f;
+        static constexpr float ImageSize = 255.0f;
+
         /* Insets of content within windows. */
         static constexpr float HorizontalInset       = 20.0f;
         static constexpr float BottomInset           = 20.0f;
@@ -484,8 +487,8 @@ namespace dbk {
 
         u32 dreamstrval;
         u16 IsDreamingBed = 0;
-        //[[[main+3DFE1D8]+10]+130]+60
-        u64 mainAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x130, 0xFFFFFFFFFFFFFFFF) + 0x60;
+        //[[[[main+4BAEF28]+10]+130]+10]
+        u64 mainAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
         
         Check chkres = CheckTemplateFiles(std::string(LUNA_TEMPLATE_DIR), mainAddr);
         if (chkres.check_result != CheckResult::Success) {
@@ -518,12 +521,12 @@ namespace dbk {
             return;
         }
 
-        if (bid != BID && bid != BID_LAST) {
+        if (std::find(BID.begin(), BID.end(), bid) == BID.end()) {
             ErrorWrongBID(&bid);
             return;
         }
 
-        if (mainAddr == 0x60) {
+        if (mainAddr == 0x00) {
             printf("Error: mainAddr");
             ErrorSimpCheck();
             return;
@@ -532,7 +535,7 @@ namespace dbk {
         dmntchtReadCheatProcessMemory(mainAddr, &dreamstrval, sizeof(u32));
         dmntchtReadCheatProcessMemory(mainAddr + EventFlagOffset + (346 * 2), &IsDreamingBed, sizeof(u16));
 
-        if (dreamstrval == 0x0 || IsDreamingBed == 0x0) {
+        if (dreamstrval == 0x0 /*|| IsDreamingBed == 0x0*/) {
             printf("Error: NoDream");
             ErrorSimpCheck();
             return;
@@ -780,7 +783,8 @@ namespace dbk {
             this->m_offset += (this->m_nextOffset - this->m_offset) * this->m_speed;
         }
         if (!g_editinglog) {
-            for (u8 i = 0; i < this->m_log_entries.size(); i++) {
+            //maybe 255 is too little oops
+            for (size_t i = 0; i < this->m_log_entries.size(); i++) {
                 float y = (20.0f + 6.0f) * i;
                 this->m_log_entries[i]->setProperties(this->getLeftBound(), this->getTopBound() - this->m_offset + y, this->getRightBound() - this->getLeftBound());
             }
@@ -825,7 +829,8 @@ namespace dbk {
         if (this->m_logHeight > this->TextAreaHeight) {
             //add scrollbar here
             float paddingtopbottom = 10.0f;
-            float scrollbarHeight = this->TextAreaHeight * (this->TextAreaHeight + this->LogRowHorizontalInset) / this->m_logHeight - paddingtopbottom * 2.0f;
+            float scrollbarHeight = this->TextAreaHeight * (this->TextAreaHeight + this->LogRowHorizontalInset) / this->m_logHeight;
+            if (scrollbarHeight < 10.0f) scrollbarHeight = 10.0f;
             float TextBackgroundOffset = y + TitleGap + ProgressTextHeight + ProgressBarHeight + VerticalGap + LogPadding;
             //value between 0.0f and 1.0f
             float percentalposition = (this->m_offset) / (this->m_logHeight - this->TextAreaHeight + this->LogRowHorizontalInset);
@@ -896,8 +901,8 @@ namespace dbk {
 
         dmntchtForceOpenCheatProcess();
 
-        //[[[[main+3DFE1D8]+10]+140]+08]
-        u64 playerAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
+        //[[[[main+4BAEF28]+10]+140]+08]
+        u64 playerAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 
         /* Change the current menu to the main menu and if there is an island name representable, put it on the dump button. */
         g_current_menu = std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str());
@@ -926,6 +931,8 @@ namespace dbk {
             DrawStar(vg, g_screen_width, g_screen_height, g_starsx[j], g_starsy[j], (0.8f * sin(3.0f /*frequency*/ * t) + 4.0f), (1.2f * sin(3.0f /*frequency*/ * t) + 1.0f));
         }
 
+        dbk::DrawImage(vg, g_screen_width - ImageSize - ImageInset, 0 + ImageInset, ImageSize, ImageSize, 0);
+        dbk::DrawImage(vg, 0, g_screen_height - 320.0f, 340.0f, 340.0f, 1);
 
 #if DEBUG_OV
         //Draw frametime

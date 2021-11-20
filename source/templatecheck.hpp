@@ -25,6 +25,13 @@ struct Check {
     std::string additional_info;
 };
 
+//define all valid save RevisionInfo here
+const std::vector<FileHeaderInfo*> RevisionInfo = std::vector<FileHeaderInfo*>{
+    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 22}, // 2.0.0
+    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 23}, // 2.0.1
+    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 24}, // 2.0.2
+};
+
 namespace temp {
     std::string getFilename(std::string& path) {
         size_t extPos = path.find_last_of('.'), slPos = path.find_last_of('/');
@@ -47,6 +54,7 @@ Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = 
     Check chkres;
     chkres.check_result = CheckResult::Success;
     bool mainfound = false;
+    bool correctRevision = false;
     u8 maskeditemscount = 0;
 
     bool exemptfrommemread = false;
@@ -59,7 +67,7 @@ Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = 
         return chkres;
     }
 
-    if (mainAddr == 0x60) {
+    if (mainAddr == 0x00) {
         exemptfrommemread = true;
     }
 
@@ -86,8 +94,11 @@ Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = 
                 char pathbuffer[FS_MAX_PATH] = { 0 };
                 std::snprintf(pathbuffer, FS_MAX_PATH, tobechecked.c_str());
                 fsFsOpenFile(&fsSdmc, pathbuffer, FsOpenMode_Read, &check);
-                fsFileRead(&check, 0, &checkDAT, 0x10, FsReadOption_None, &bytesread);
-                if (!(checkDAT.SaveRevision <= REVISION_SAVE && checkDAT.SaveRevision >= REVISION_SAVE_LAST) || checkDAT.Major != REVISION_MAJOR || checkDAT.Minor != REVISION_MINOR) {
+                fsFileRead(&check, 0, &checkDAT, sizeof(FileHeaderInfo), FsReadOption_None, &bytesread);
+                for (auto &r : RevisionInfo) {
+                    if(memcmp(r, &checkDAT, sizeof(FileHeaderInfo)) == 0) correctRevision = true;
+                }
+                if (!correctRevision) {
                     chkres.check_result = CheckResult::WrongRevision;
                     char revision[50];
                     std::snprintf(revision, 50, "M = 0x%X, m = 0x%X, rev = %2u", checkDAT.Major, checkDAT.Minor, checkDAT.SaveRevision);
@@ -124,12 +135,16 @@ Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = 
         printf("missing main.dat\n");
         chkres.check_result = CheckResult::MissingFiles;
     }
-    for (u8 i = 0; i < 8; i++) {
-        if (players[i] != personalfound[i]) {
-            printf("missing personal.dat\n");
-            chkres.check_result = CheckResult::MissingFiles;
+
+    if (chkres.check_result != CheckResult::NotEnoughPlayers) {
+        for (u8 i = 0; i < 8; i++) {
+            if (players[i] != personalfound[i]) {
+                printf("missing personal.dat\n");
+                chkres.check_result = CheckResult::MissingFiles;
+            }
         }
     }
+
     if (((listcount - maskeditemscount) % 2) == 1) {
         printf("missing headerfiles (uneven number of files)\n");
         chkres.check_result = CheckResult::MissingFiles;

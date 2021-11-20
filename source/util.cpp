@@ -2,65 +2,111 @@
 
 extern const s64 SaveHeaderSize = 0x110;
 
-extern const u64 mainSize = 0x5279A0; //changed in 1.10.0 // GSaveLandOther - Header
-extern const u64 GSavePlayerVillagerAccountOffset = 0x1E2290 - SaveHeaderSize; //changed in 1.10.0
+extern const u64 mainSize = 0x547520 - SaveHeaderSize; //changed in 2.0.0 // GSaveLandOther - Header
+extern const u64 GSavePlayerVillagerAccountOffset = 0x1E34C0 - SaveHeaderSize; //changed in 2.0.0
 extern const u64 GSavePlayerVillagerAccountSize = 0x48;
 extern const u64 GAccountTableOffset = 0x10;
-extern const u64 DreamIDOffset = 0x5264E8; //changed in 1.10.0
+extern const u64 DreamIDOffset = 0x545F50; //changed in 2.0.0
 extern const u64 DreamInfoSize = 0x50;
 
 
-extern const u64 playerSize = 0x36940;
-extern const u64 playersOffset = 0x7A970; //changed in 1.9.0
+extern const u64 playerSize = 0x36A50 - SaveHeaderSize; //changed in 1.10.0 // GSaveLandOther - Header
+extern const u64 playersOffset = 0x7B658; //changed in 1.9.0
 
 //taken from NHSE
 //*personal.dat*//
-extern const u64 PersonalID = 0xAFA8;
+extern const u64 PersonalID = 0xAFA8; 
 extern const u64 EventFlagsPlayerOffset = 0xAFE0;
-extern const u64 PlayerOtherOffset = 0x36a50 - SaveHeaderSize; //0x36940
 extern const u64 ItemCollectBitOffset = 0xA058;
-extern const u64 StorageSizeOffset = PlayerOtherOffset + SaveHeaderSize + 0x18C + (8 * 5000); //absolute file offset //changed in 1.7.0 0x4081C
-extern const u64 Pocket1SizeOffset = PlayerOtherOffset + SaveHeaderSize + 0x10 + (8 * 20); //absolute file offset //changed in 1.7.0 0x36B00
+extern const u64 ItemRemakeCollectBitOffset = 0xA7AC;
+extern const u64 RecipesOffset = 0x24afc + 0x10; //Bank + 0x10
+extern const u64 StorageSizeOffset = playerSize + SaveHeaderSize + 0x18C + (8 * 5000); //absolute file offset //changed in 1.7.0 0x4081C
+extern const u64 Pocket1SizeOffset = playerSize + SaveHeaderSize + 0x10 + (8 * 20); //absolute file offset //changed in 1.7.0 0x36B00
 extern const u64 ExpandBaggageOffset = 0x36BD8;
 
 //*main.dat*//
 extern const u64 houseSize = 0x26400;
-extern const u64 houseLvlOffset = 0x308be4; //changed in 1.10.0
-extern const u64 EventFlagOffset = 0x22d9b8; //changed in 1.10.0
+extern const u64 EventFlagOffset = 0x22ebf0; //changed in 2.0.0 //EventFlagLand
+extern const u64 houseLvlOffset = 0x30a6bc; //changed in 2.0.0 //PlayerHouseList
+extern const u64 SaveFgOffset = 0x462278; //changed in 2.0.0 //SaveFg
+extern const u64 SpecialityFruitOffset = 0x900; //SpecialityFruit
 
 
-/*hashes*/
 
-extern const u32 REV_1110_MAIN_SIZE = 0x86D570;
-extern const u32 REV_1110_PERSONAL_SIZE = 0x64160;
-
-extern const std::vector<FileHashRegion*> REV_1110_MAIN = std::vector<FileHashRegion*> {
-		new FileHashRegion(0x000110, 0x1e216c),
-		new FileHashRegion(0x1e2280, 0x34582c),
-		new FileHashRegion(0x527bc0, 0x03693c),
-		new FileHashRegion(0x55e500, 0x02d70c),
-		new FileHashRegion(0x58bd20, 0x03693c),
-		new FileHashRegion(0x5c2660, 0x02d70c),
-		new FileHashRegion(0x5efe80, 0x03693c),
-		new FileHashRegion(0x6267c0, 0x02d70c),
-		new FileHashRegion(0x653fe0, 0x03693c),
-		new FileHashRegion(0x68a920, 0x02d70c),
-		new FileHashRegion(0x6b8140, 0x03693c),
-		new FileHashRegion(0x6eea80, 0x02d70c),
-		new FileHashRegion(0x71c2a0, 0x03693c),
-		new FileHashRegion(0x752be0, 0x02d70c),
-		new FileHashRegion(0x780400, 0x03693c),
-		new FileHashRegion(0x7b6d40, 0x02d70c),
-		new FileHashRegion(0x7e4560, 0x03693c),
-		new FileHashRegion(0x81aea0, 0x02d70c),
-		new FileHashRegion(0x8485b0, 0x024fbc),
+extern const std::vector<u16> MainmenuRecipes = std::vector<u16>{
+		0x00A, //flimsy axe
+		0x00D, //campfire
+		0x015, //flimsy fishing rod
+		0x016, //flimsy net
+		0x06B, //ladder
 };
 
-extern const std::vector<FileHashRegion*> REV_1110_PERSONAL = std::vector<FileHashRegion*> {
+extern const std::vector<u16> PrettyGoodToolsRecipesRecipes = std::vector<u16>{
+		0x10F, //axe
+		0x118, //watering can
+		0x119, //shovel
+		0x11A, //fishing rod
+		0x11B, //net
+		0x11D, //stone axe
+};
+
+extern const std::vector<u16> BeAChefRecipes = std::vector<u16>{
+		0x34C, //carrot potage
+		0x387, //flour
+		0x38A, //sugar
+		0x3A4, //tomato curry
+		0x3A5, //pumpkin bagel sandwich
+		0x3A9, //pancakes
+		0x3B1, //grilled sea bass with herbs
+		0x410, // stonework kitchen
+};
+
+const std::map<u16, u16> TownfruitSmoothiesMap = {
+	{2213, 0x38D}, //apple smoothie
+	{2214, 0x38E}, //orange smoothie
+	{2285, 0x388}, //pear smoothie
+	{2286, 0x38C}, //peach smoothie
+	{2287, 0x384}, //cherry smoothie
+};
+
+/*2.0.X specific stuff*/
+
+extern const  std::vector<u64> BID = {
+	0xE4BBD879D326A0AD, //2.0.0
+	0x8C81A85AA4C1990B, //2.0.1
+	0xE5759E5B7E31411B, //2.0.2
+};
+
+
+extern const u32 REV_200_MAIN_SIZE = 0x8F1BB0;
+extern const u32 REV_200_PERSONAL_SIZE = 0x6A520;
+
+extern const std::vector<FileHashRegion*> REV_200_MAIN = std::vector<FileHashRegion*> {
+		new FileHashRegion(0x000110, 0x1e339c),
+		new FileHashRegion(0x1e34b0, 0x36406c),
+		new FileHashRegion(0x547630, 0x03693c),
+		new FileHashRegion(0x57df70, 0x033acc),
+		new FileHashRegion(0x5b1b50, 0x03693c),
+		new FileHashRegion(0x5e8490, 0x033acc),
+		new FileHashRegion(0x61c070, 0x03693c),
+		new FileHashRegion(0x6529b0, 0x033acc),
+		new FileHashRegion(0x686590, 0x03693c),
+		new FileHashRegion(0x6bced0, 0x033acc),
+		new FileHashRegion(0x6f0ab0, 0x03693c),
+		new FileHashRegion(0x7273f0, 0x033acc),
+		new FileHashRegion(0x75afd0, 0x03693c),
+		new FileHashRegion(0x791910, 0x033acc),
+		new FileHashRegion(0x7c54f0, 0x03693c),
+		new FileHashRegion(0x7fbe30, 0x033acc),
+		new FileHashRegion(0x82fa10, 0x03693c),
+		new FileHashRegion(0x866350, 0x033acc),
+		new FileHashRegion(0x899e20, 0x057d8c),
+};
+
+extern const std::vector<FileHashRegion*> REV_200_PERSONAL = std::vector<FileHashRegion*> {
 		new FileHashRegion(0x00110, 0x3693c),
-		new FileHashRegion(0x36a50, 0x2d70c),
+		new FileHashRegion(0x36a50, 0x33acc),
 };
-
 
 
 
@@ -214,6 +260,13 @@ void util::setBitBequalsA(u16 A, unsigned char* B, int bitIndexOffset) {
 	if ((A == 1) != (util::getFlag(B, bitIndexOffset))) B[bitIndexOffset >> 3] ^= (1 << (bitIndexOffset & 7));
 }
 
+void util::SetFlag(u8* Data, int bitIndex, u16 value) {
+	int offset = (bitIndex >> 3); //if larger than 8, its the next byte
+	bitIndex &= 7; // ensure bit access is 0-7
+	Data[offset] &= (u8)~(1 << bitIndex);
+	Data[offset] |= (u8)((value ? 1 : 0) << bitIndex);
+}
+
 std::string util::GetLastTimeSaved(u64 mainAddr)
 {
 	const char* date_format = "%02d.%02d.%04d @ %02d-%02d";
@@ -243,3 +296,19 @@ bool util::isServiceRunning(const char* serviceName) {
 		return false;
 }
 
+void util::overclockSystem(bool enable) {
+	if (hosversionBefore(8, 0, 0)) {
+		pcvSetClockRate(PcvModule_CpuBus, enable ? 1785 MHz : 1020 MHz);  // Set CPU clock
+		pcvSetClockRate(PcvModule_EMC, enable ? 1600 MHz : 1331 MHz);     // Set memory clock
+	}
+	else {
+		ClkrstSession clkrstSession;
+		clkrstOpenSession(&clkrstSession, PcvModuleId_CpuBus, 3);
+		clkrstSetClockRate(&clkrstSession, enable ? 1785 MHz : 1020 MHz); // Set CPU clock
+		clkrstCloseSession(&clkrstSession);
+
+		clkrstOpenSession(&clkrstSession, PcvModuleId_EMC, 3);
+		clkrstSetClockRate(&clkrstSession, enable ? 1600 MHz : 1331 MHz); // Set memory clock
+		clkrstCloseSession(&clkrstSession);
+	}
+}

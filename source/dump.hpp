@@ -41,7 +41,9 @@ namespace Dump {
 		u8* g_AccountTableBuffer = nullptr;
 		size_t g_bufferSize = BUFF_SIZE;
 		u8* g_buffer = nullptr;
-		
+
+		size_t g_RecipeBookSize = 0x100 * 4; //each recipe has 4 flags; there are 0x800max recipes, there are basically "4 books", 0x100 known recipes, 0x100 made recipes, 0x100 new flag, 0x100 favorite flag. IT DOESNT HAVE ALL 4 FLAGS NEXT TO EACH OTHER
+		u8 *g_RecipeBook = nullptr;
 
 		void addPathFilter(const std::string& _path)
 		{
@@ -187,13 +189,13 @@ namespace Dump {
 		fsFileRead(&md, 0, Data, datasize, FsReadOption_None, &bytesread);
 		
 		if (fileName == "main.dat") {
-			for (auto& h : REV_1110_MAIN) {
+			for (auto &h : REV_200_MAIN) {
 				MurmurHash3::Update(Data, h->HashOffset, h->getBeginOffset(), h->Size);
 			}
 		}
 
 		if (fileName == "personal.dat") {
-			for (auto& h : REV_1110_PERSONAL) {
+			for (auto &h : REV_200_PERSONAL) {
 				MurmurHash3::Update(Data, h->HashOffset, h->getBeginOffset(), h->Size);
 			}
 		}
@@ -293,8 +295,11 @@ namespace Dump {
 		for (u8 i = 0; i < 8; i++) {
 			u64 offset = i * GSavePlayerVillagerAccountSize;
 			u128 AccountUID = 0;
+			printf("%lX\n", g_mainAddr + GSavePlayerVillagerAccountOffset + offset);
 			dmntchtReadCheatProcessMemory(g_mainAddr + GSavePlayerVillagerAccountOffset + offset, &AccountUID, 0x10);
 			if (AccountUID != 0) g_players[i] = true;
+			u64 part1 = (u64)(AccountUID>>64), part2 = (u64)(AccountUID & 0xFFFFFFFFFFFFFFFF);
+			printf("%lX%lX\n", part1, part2);
 		}
 	}
 
@@ -319,6 +324,7 @@ namespace Dump {
 		std::snprintf(path, FS_MAX_PATH, (g_pathOut + "main.dat").c_str());
 		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Read, &md);
 		g_AccountTableBuffer = new u8[g_AccountTableSize];
+		printf("fileoffset Account Table: %lX\n", SaveHeaderSize + GSavePlayerVillagerAccountOffset - GAccountTableOffset);
 		fsFileRead(&md, SaveHeaderSize + GSavePlayerVillagerAccountOffset - GAccountTableOffset, g_AccountTableBuffer, g_AccountTableSize, FsReadOption_None, &bytesread);
 		fsFileClose(&md);
 	}
@@ -333,9 +339,9 @@ namespace Dump {
 		fsOpenSdCardFileSystem(&g_fsSdmc);
 		addProgress(0.02f);
 		printf("progress: %.2F\n", *g_progress_percent);
-		//[[[main+3DFE1D8]+10]+130]+60
-		g_mainAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x130, 0xFFFFFFFFFFFFFFFF) + 0x60;
-		if (g_mainAddr == 0x60) {
+		//[[[[main+4BAEF28]+10]+130]+10]
+		g_mainAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
+		if (g_mainAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: mainAddr");
 			printf("Error: mainAddr\n");
 #if !DEBUG_UI
@@ -343,8 +349,8 @@ namespace Dump {
 			return;
 #endif
 		}
-		//[[[[main+3DFE1D8]+10]+140]+08]
-		g_playerAddr = util::FollowPointerMain(0x3DFE1D8, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
+		//[[[[main+4BAEF28]+10]+140]+08]
+		g_playerAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 		if (g_playerAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: playerAddr");
 			printf("Error: playerAddr\n");
@@ -356,7 +362,6 @@ namespace Dump {
 	
 #if !DEBUG_UI
 		checkPlayers();
-		getAccountTable();
 
 		TimeCalendarTime dumpdreamtime = util::getDreamTime(g_mainAddr);
 		char dreamtime[128];
@@ -375,11 +380,11 @@ namespace Dump {
 		g_pathOut += "/";
 
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsDecrypt;
+
+		addProgress(0.08f);
 #else
 		enableButton();
 #endif
-		addProgress(0.08f);
-
 	}
 
 	void Decrypt() {
@@ -397,6 +402,8 @@ namespace Dump {
 	}
 
 	void RWData() {
+		getAccountTable();
+
 		static char pathbuffer[FS_MAX_PATH] = { 0 };
 		g_buffer = new u8[BUFF_SIZE];
 
@@ -498,10 +505,23 @@ namespace Dump {
 		fsFileWrite(&md, SaveHeaderSize + EventFlagOffset + (362 * 2), &EnableMyDream, sizeof(u16), FsWriteOption_Flush);
 		fsFileWrite(&md, SaveHeaderSize + EventFlagOffset + (364 * 2), &DreamUploadPlayerHaveCreatorID, sizeof(u16), FsWriteOption_Flush);
 
+		printf("Account Table Buffer:\n");
+		for (int i = 0; i < g_AccountTableSize; i++) {
+			if (((i+1) % 16) == 0) {
+				printf("%02X\n", g_AccountTableBuffer[i]);
+			}
+			else {
+				printf("%02X ", g_AccountTableBuffer[i]);
+			}
+		}
+		printf("\n");
 		//write AccountUID linkage (for Nintendo Switch Online)
-		fsFileWrite(&md, SaveHeaderSize + GSavePlayerVillagerAccountOffset - GAccountTableOffset, g_AccountTableBuffer, 0x10, FsWriteOption_Flush);
 		for (u8 i = 0; i < 8; i++) {
 			if (g_players[i]) {
+				u128 AccountUID;
+				memcpy(&AccountUID, g_AccountTableBuffer + 0x10 + (i * 0x48), 0x10);
+				u64 part1 = (u64)(AccountUID >> 64), part2 = (u64)(AccountUID & 0xFFFFFFFFFFFFFFFF);
+				printf("wrote UID: %lX%lX\n", part1, part2);
 				fsFileWrite(&md, SaveHeaderSize + GSavePlayerVillagerAccountOffset + (i * 0x48), g_AccountTableBuffer + 0x10 + (i * 0x48), 0x10, FsWriteOption_Flush);
 			}
 		}
@@ -547,12 +567,16 @@ namespace Dump {
 
 			u8 HairStyles[sizeof(u8)]; //9049 - 9051
 			u8 StylishHairStyles[sizeof(u8)]; //13767
+			u8 PrettyGoodToolsRecipes[sizeof(u8)]; //9221
 			u8 ToolRingItsEssential[sizeof(u8)]; //9616
 			u8 PermitsandLicenses[sizeof(u16)]; //8773 - 8781
 			u8 CustomDesignPathPermit[sizeof(u8)]; //9771
 			u8 CustomDesignProEditor[sizeof(u8)]; //12185
 			u8 CustomDesignProEditorPlus[sizeof(u8)]; //13195
 			u8 HalloweenCharacterColors[sizeof(u8)]; //13256 - 13258
+			u8 Update200RecipeLicenseApp[sizeof(u8)]; //14691-14695
+			u8 IslandLife101Service[sizeof(u8)]; //14796
+			u8 Top4FabHairstyles[sizeof(u8)]; //14829
 
 			u16 HairStyleColor[3] = { 0 };
 			u16 AddHairStyle4; //1219
@@ -560,8 +584,20 @@ namespace Dump {
 			u16 GetLicenses[9] = { 0 };
 			u16 GetLicenseGrdMydesign; //644
 			u16 UnlockMyDesignProCategory; //714
+			u16 P2_CreatedAfterOwlMoving; //759
+			u16 OwlGotDiyRecipe; //760
 			u16 UnlockMydesignPro2; //1172
 			u16 AddHalloweenColor[3] = { 0 }; //1142-1144
+			u16 MainmenuRecipe; //171
+			u16 MainmenuRecipe_v2; //1410
+			u16 MainmenuMydesignPatternPlus; //1448
+			u16 MainmenuCamera1stPersonView; //1450
+			u16 UnlockInterior_CeilingFurniture; //1452
+			u16 FenceRemakeEnable; //1453
+			u16 MainmenuTips; //1538
+			u16 UnlockPlayerHair37to47[11] = { 0 }; //1567-1577
+
+			g_RecipeBook = new u8[g_RecipeBookSize];
 
 			dmntchtReadCheatProcessMemory(g_mainAddr + houseLvlOffset + (i * houseSize), &houselvl, sizeof(u8));
 			dmntchtReadCheatProcessMemory(g_mainAddr + EventFlagOffset + (59 * 2), &BuiltTownOffice, sizeof(u16));
@@ -572,23 +608,39 @@ namespace Dump {
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (565 * 2), &GetLicenses, sizeof(GetLicenses));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (644 * 2), &GetLicenseGrdMydesign, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (714 * 2), &UnlockMyDesignProCategory, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (759 * 2), &P2_CreatedAfterOwlMoving, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (760 * 2), &OwlGotDiyRecipe, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1172 * 2), &UnlockMydesignPro2, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1142 * 2), &AddHalloweenColor, sizeof(AddHalloweenColor));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (171 * 2), &MainmenuRecipe, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1410 * 2), &MainmenuRecipe_v2, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1448 * 2), &MainmenuMydesignPatternPlus, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1450 * 2), &MainmenuCamera1stPersonView, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1452 * 2), &UnlockInterior_CeilingFurniture, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1453 * 2), &FenceRemakeEnable, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1538 * 2), &MainmenuTips, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1567 * 2), &UnlockPlayerHair37to47, sizeof(UnlockPlayerHair37to47));
 
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2359 / 8), HairStyles, sizeof(u8), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x35C6 / 8), StylishHairStyles, sizeof(u8), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2590 / 8), ToolRingItsEssential, sizeof(u8), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2245 / 8), PermitsandLicenses, sizeof(u16), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x262B / 8), CustomDesignPathPermit, sizeof(u8), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2F99 / 8), CustomDesignProEditor, sizeof(u8), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x338B / 8), CustomDesignProEditorPlus, sizeof(u8), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x33C8 / 8), HalloweenCharacterColors, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2359 / 8), HairStyles, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x35C6 / 8), StylishHairStyles, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2405 / 8), PrettyGoodToolsRecipes, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2590 / 8), ToolRingItsEssential, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2245 / 8), PermitsandLicenses, sizeof(u16), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x262B / 8), CustomDesignPathPermit, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2F99 / 8), CustomDesignProEditor, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x338B / 8), CustomDesignProEditorPlus, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x33C8 / 8), HalloweenCharacterColors, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x3963 / 8), Update200RecipeLicenseApp, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x39CC / 8), IslandLife101Service, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x39ED / 8), Top4FabHairstyles, sizeof(u8), FsReadOption_None, &bytesread);
+
+			fsFileRead(&pd, SaveHeaderSize + playerSize + RecipesOffset, g_RecipeBook, g_RecipeBookSize, FsReadOption_None, &bytesread);
 
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (669 * 2), &UpgradePocket30, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (670 * 2), &UpgradePocket40, sizeof(u16));
 
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x235C / 8), &ReceivedItemPocket30, sizeof(u8), FsReadOption_None, &bytesread);
-			fsFileRead(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2B84 / 8), &ReceivedItemPocket40, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x235C / 8), &ReceivedItemPocket30, sizeof(u8), FsReadOption_None, &bytesread);
+			fsFileRead(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2B84 / 8), &ReceivedItemPocket40, sizeof(u8), FsReadOption_None, &bytesread);
 
 			//prep for 2.0 update
 			u32 storageSizes[] = {
@@ -608,6 +660,14 @@ namespace Dump {
 
 			storageSize = storageSizes[houselvl];
 
+			u16 Update200Flags[] = {
+				MainmenuRecipe_v2,						//Be a Chef! DIY Recipes+
+				MainmenuMydesignPatternPlus,			//Custom Designs Patterns+
+				UnlockInterior_CeilingFurniture,		//Pro Decorating License
+				FenceRemakeEnable,						//Custom Fencing in a Flash
+				MainmenuCamera1stPersonView,			//Pro Camera App
+			};
+
 			//0xXXXX modulo 8 is our bit offset in the byte(s).
 			util::setBitBequalsA(HairStyleColor, sizeof(HairStyleColor) / sizeof(HairStyleColor[0]), HairStyles,						0x2359 % 8);
 			util::setBitBequalsA(AddHairStyle4, StylishHairStyles,																		0x35C6 % 8);
@@ -617,6 +677,9 @@ namespace Dump {
 			util::setBitBequalsA(UnlockMyDesignProCategory, CustomDesignProEditor,														0x2F99 % 8);
 			util::setBitBequalsA(UnlockMydesignPro2, CustomDesignProEditorPlus,															0x338B % 8);
 			util::setBitBequalsA(AddHalloweenColor, sizeof(AddHalloweenColor) / sizeof(AddHalloweenColor[0]), HalloweenCharacterColors,	0x33C8 % 8);
+			util::setBitBequalsA(Update200Flags, sizeof(Update200Flags) / sizeof(Update200Flags[0]), Update200RecipeLicenseApp,			0x3963 % 8);
+			util::setBitBequalsA(MainmenuTips, IslandLife101Service,																	0x39CC % 8);
+			util::setBitBequalsA(UnlockPlayerHair37to47[0], Top4FabHairstyles,															0x39ED % 8); //if they got the first, they bought them lol
 
 			//overlapping byte
 			ReceivedItemPocket30 = HairStyles[0];
@@ -634,16 +697,56 @@ namespace Dump {
 			}
 			else if (((ReceivedItemPocket30 >> 4) & 1) == 1) ReceivedItemPocket30 ^= (1 << 4);
 
+
+
+			//Editing Recipes based on our flags
+			for (u16 i : MainmenuRecipes) {
+				util::SetFlag(g_RecipeBook, i, MainmenuRecipe);
+			}
+			for (u16 i : PrettyGoodToolsRecipesRecipes) {
+				//util::SetFlag(g_RecipeBook, i, ((PrettyGoodToolsRecipes[0] >> (0x2405 % 8)) & 0x1));
+				//fuck it, lets just give it to them
+				util::SetFlag(g_RecipeBook, i, MainmenuRecipe);
+				util::setBitBequalsA(MainmenuRecipe, PrettyGoodToolsRecipes, 0x2405 % 8);
+			}
+			for (u16 i : BeAChefRecipes) {
+				util::SetFlag(g_RecipeBook, i, MainmenuRecipe_v2);
+			}
+
+			u16 g_SpecialityFruit = 0;
+			dmntchtReadCheatProcessMemory(g_mainAddr + SaveFgOffset + SpecialityFruitOffset, &g_SpecialityFruit, sizeof(u16));
+			printf("SpecialityFruit: %04d\n", g_SpecialityFruit);
+			//printf("Smoothie: 0x%04X\n", TownfruitSmoothiesMap.find(g_SpecialityFruit)->second);
+			util::SetFlag(g_RecipeBook, TownfruitSmoothiesMap.find(g_SpecialityFruit)->second, MainmenuRecipe_v2);
+
+			if (OwlGotDiyRecipe == 1 || P2_CreatedAfterOwlMoving == 1) {
+				//Vaulting Pole is unlocked with MainmenuRecipe when its a player other than player 1
+				//just gonna use MainmenuRecipe, because P1 obviously has it unlocked anyway
+				util::SetFlag(g_RecipeBook, 0x0B7, MainmenuRecipe);
+			}
+
+			printf("Recipe Book:\n");
+			for (int i = 0; i < 0x100; i++) {
+				if (((i + 1) % 16) == 0) {
+					printf("%02X\n", g_RecipeBook[i]);
+				}
+				else {
+					printf("%02X ", g_RecipeBook[i]);
+				}
+			}
+
 #if DEBUG
+			/*
 			g_dumping_menu->LogAddLine("AddHairStyle1: " + std::to_string(HairStyleColor[0]));
 			g_dumping_menu->LogAddLine("AddHairStyle2: " + std::to_string(HairStyleColor[1]));
 			g_dumping_menu->LogAddLine("AddHairStyle3: " + std::to_string(HairStyleColor[2]));
 			g_dumping_menu->LogAddLine("HairStyles: " + std::to_string((HairStyles[0] >> 1) & 7));
 			g_dumping_menu->LogAddLine("AddHairStyle4: " + std::to_string(AddHairStyle4));
 			g_dumping_menu->LogAddLine("StylishHairStyles: " + std::to_string((StylishHairStyles[0] >> 6) & 1));
-
+			
 			g_dumping_menu->LogAddLine("ItemRingEnable: " + std::to_string(ItemRingEnable));
 			g_dumping_menu->LogAddLine("Tool Ring: It's Essential!: " + std::to_string(ToolRingItsEssential[0] & 1));
+			
 
 			g_dumping_menu->LogAddLine("GetLicenseGrdStone: " + std::to_string(GetLicenses[0]));
 			g_dumping_menu->LogAddLine("GetLicenseGrdBrick: " + std::to_string(GetLicenses[1]));
@@ -660,6 +763,7 @@ namespace Dump {
 
 			g_dumping_menu->LogAddLine("GetLicenseGrdMydesign: " + std::to_string(GetLicenseGrdMydesign));
 			g_dumping_menu->LogAddLine("CustomDesignPathPermit: " + std::to_string(((CustomDesignPathPermit[0] >> (0x262B % 8)) & 1)));
+			*/
 
 			g_dumping_menu->LogAddLine("UnlockMyDesignProCategory: " + std::to_string(UnlockMyDesignProCategory));
 			g_dumping_menu->LogAddLine("Custom Design Pro Editor: " + std::to_string(((CustomDesignProEditor[0] >> (0x2F99 % 8)) & 1)));
@@ -677,24 +781,34 @@ namespace Dump {
 			g_dumping_menu->LogAddLine("Pocket Organization Guide: " + std::to_string(((ReceivedItemPocket30 >> 4) & 1)));
 			g_dumping_menu->LogAddLine("Ultimate Pocket Stuffing Guide: " + std::to_string(((ReceivedItemPocket40 >> 4) & 1)));
 			g_dumping_menu->LogAddLine("ExpandBaggage: " + std::to_string(ExpandBaggage));
+			g_dumping_menu->LogAddLine("Houselvl: " + std::to_string(houselvl));
+			g_dumping_menu->LogAddLine("StorageSize: " + std::to_string(storageSize));
 #endif
 
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2359 / 8), HairStyles, sizeof(u8), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x35C6 / 8), StylishHairStyles, sizeof(u8), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x262B / 8), CustomDesignPathPermit, sizeof(u8), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2590 / 8), ToolRingItsEssential, sizeof(u8), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2245 / 8), PermitsandLicenses, sizeof(u16), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2F99 / 8), CustomDesignProEditor, sizeof(u8), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x338B / 8), CustomDesignProEditorPlus, sizeof(u8), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x33C8 / 8), HalloweenCharacterColors, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2359 / 8), HairStyles, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x35C6 / 8), StylishHairStyles, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2405 / 8), PrettyGoodToolsRecipes, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x262B / 8), CustomDesignPathPermit, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2590 / 8), ToolRingItsEssential, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2245 / 8), PermitsandLicenses, sizeof(u16), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2F99 / 8), CustomDesignProEditor, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x338B / 8), CustomDesignProEditorPlus, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x33C8 / 8), HalloweenCharacterColors, sizeof(u8), FsWriteOption_Flush);
+
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x3963 / 8), Update200RecipeLicenseApp, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x39CC / 8), IslandLife101Service, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x39ED / 8), Top4FabHairstyles, sizeof(u8), FsWriteOption_Flush);
+
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + RecipesOffset, g_RecipeBook, g_RecipeBookSize, FsWriteOption_Flush);
 
 			fsFileWrite(&pd, StorageSizeOffset, &storageSize, sizeof(u32), FsWriteOption_Flush);
 			fsFileWrite(&pd, Pocket1SizeOffset, &pocket1Size, sizeof(u32), FsWriteOption_Flush);
 			fsFileWrite(&pd, ExpandBaggageOffset, &ExpandBaggage, sizeof(u8), FsWriteOption_Flush);
 			fsFileWrite(&pd, SaveHeaderSize + EventFlagsPlayerOffset + (672 * 2), &SellPocket40, sizeof(u16), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x235C / 8), &ReceivedItemPocket30, sizeof(u8), FsWriteOption_Flush);
-			fsFileWrite(&pd, SaveHeaderSize + PlayerOtherOffset + ItemCollectBitOffset + (0x2B84 / 8), &ReceivedItemPocket40, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x235C / 8), &ReceivedItemPocket30, sizeof(u8), FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2B84 / 8), &ReceivedItemPocket40, sizeof(u8), FsWriteOption_Flush);
 
+			delete g_RecipeBook;
 			g_dumping_menu->LogEditElement("Applying fixes to player " + std::to_string(i + 1) + "...", "Applying fixes to player " + std::to_string(i + 1) + ": successful");
 			fsFileClose(&pd);
 		}

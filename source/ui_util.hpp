@@ -36,6 +36,10 @@ namespace dbk {
         RightAlign,
     };
 
+    int loadData(NVGcontext* vg);
+    void freeData(NVGcontext* vg);
+    void DrawImageCircle(NVGcontext* vg, float x, float y, float w, float h, int imgid);
+    void DrawImage(NVGcontext* vg, float x, float y, float w, float h, int imgid);
     void DrawStar(NVGcontext* vg, float w, float h, float x, float y, float width, float luminosity);
     void DrawBackground(NVGcontext* vg, float w, float h, u64 ns);
     void DrawWindow(NVGcontext *vg, const char *title, float x, float y, float w, float h);

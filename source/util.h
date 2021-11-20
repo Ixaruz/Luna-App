@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdio>
 #include <cstdarg>		//va_list and stuff
+#include <map>
 #include <cstdlib>
 #include <sys/stat.h>
 #include "helpers\dmnt\dmntcht.h"
@@ -15,6 +16,8 @@
 
 #ifndef UTIL_H
 #define UTIL_H
+
+#define MHz *1E6
 
 extern const s64 SaveHeaderSize;
 
@@ -31,8 +34,9 @@ extern const u64 playersOffset;
 //taken from NHSE
 extern const u64 PersonalID;
 extern const u64 EventFlagsPlayerOffset;
-extern const u64 PlayerOtherOffset;
 extern const u64 ItemCollectBitOffset;
+extern const u64 ItemRemakeCollectBitOffset;
+extern const u64 RecipesOffset;
 extern const u64 StorageSizeOffset;
 extern const u64 Pocket1SizeOffset;
 extern const u64 ExpandBaggageOffset;
@@ -40,9 +44,21 @@ extern const u64 ExpandBaggageOffset;
 extern const u64 houseSize;
 extern const u64 houseLvlOffset;
 extern const u64 EventFlagOffset;
+extern const u64 SaveFgOffset;
+extern const u64 SpecialityFruitOffset;
 
-extern const u32 REV_1110_MAIN_SIZE;
-extern const u32 REV_1110_PERSONAL_SIZE;
+extern const u32 REV_200_MAIN_SIZE;
+extern const u32 REV_200_PERSONAL_SIZE;
+
+extern const std::vector<u16> MainmenuRecipes;
+
+extern const std::vector<u16> PrettyGoodToolsRecipesRecipes;
+
+extern const std::vector<u16> BeAChefRecipes;
+
+extern const std::map<u16, u16> TownfruitSmoothiesMap;
+
+extern const std::vector<u64> BID;
 
 class FileHashRegion
 {
@@ -56,9 +72,8 @@ public:
     {}
 };
 
-extern const std::vector<FileHashRegion*> REV_1110_MAIN;
-extern const std::vector<FileHashRegion*> REV_1110_PERSONAL;
-
+extern const std::vector<FileHashRegion*> REV_200_MAIN;
+extern const std::vector<FileHashRegion*> REV_200_PERSONAL;
 
 struct IslandName {
     u16 name[0xB];
@@ -86,8 +101,12 @@ namespace util
 
     void setBitBequalsA(u16 A, unsigned char* B, int bitIndexOffset);
 
+    void SetFlag(u8* Data, int bitIndex, u16 value);
+
     std::string GetLastTimeSaved(u64 mainAddr);
 
     bool isServiceRunning(const char* serviceName);
+
+    void overclockSystem(bool enable);
 }
 #endif // UTIL_H
