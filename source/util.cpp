@@ -11,7 +11,7 @@ extern const u64 DreamInfoSize = 0x50;
 
 
 extern const u64 playerSize = 0x36A50 - SaveHeaderSize; //changed in 1.10.0 // GSaveLandOther - Header
-extern const u64 playersOffset = 0x7B658; //changed in 1.9.0
+extern const u64 playersOffset = 0x7B658; //changed in 1.9.0 //alternatively in the player pointer [[[[main+XXXXXX]+10]+140]+08] you can add 0x8 to 0x140 for each additional player
 
 //taken from NHSE
 //*personal.dat*//
@@ -25,7 +25,7 @@ extern const u64 Pocket1SizeOffset = playerSize + SaveHeaderSize + 0x10 + (8 * 2
 extern const u64 ExpandBaggageOffset = 0x36BD8;
 
 //*main.dat*//
-extern const u64 houseSize = 0x26400;
+extern const u64 houseSize = 0x28A28; //changed in 2.0.0
 extern const u64 EventFlagOffset = 0x22ebf0; //changed in 2.0.0 //EventFlagLand
 extern const u64 houseLvlOffset = 0x30a6bc; //changed in 2.0.0 //PlayerHouseList
 extern const u64 SaveFgOffset = 0x462278; //changed in 2.0.0 //SaveFg
@@ -71,12 +71,21 @@ const std::map<u16, u16> TownfruitSmoothiesMap = {
 
 /*2.0.X specific stuff*/
 
-extern const  std::vector<u64> BID = {
+extern const std::vector<u64> BID = {
 	0xE4BBD879D326A0AD, //2.0.0
 	0x8C81A85AA4C1990B, //2.0.1
 	0xE5759E5B7E31411B, //2.0.2
+	0x205F55C725C16C6F, //2.0.3
+	0x372C5EA461D03A7D, //2.0.4
 };
 
+extern const std::vector<u64> VersionPointerOffset = {
+	0x4BAEF28, //2.0.0
+	0x4BAEF28, //2.0.1
+	0x4BAEF28, //2.0.2
+	0x4BAEF28, //2.0.3
+	0x4C1AD20, //2.0.4
+};
 
 extern const u32 REV_200_MAIN_SIZE = 0x8F1BB0;
 extern const u32 REV_200_PERSONAL_SIZE = 0x6A520;
@@ -108,7 +117,17 @@ extern const std::vector<FileHashRegion*> REV_200_PERSONAL = std::vector<FileHas
 		new FileHashRegion(0x36a50, 0x33acc),
 };
 
+extern int versionindex = 0;
 
+bool util::findVersionIndex(u64 versionBID) {
+	auto p = std::find(BID.begin(), BID.end(), versionBID);
+	if (p == BID.end()) return false;
+	else {
+		versionindex = std::distance(BID.begin(), p);
+		printf("current version: 2.0.%d\n", versionindex);
+		return true;
+	}
+}
 
 static const char verboten[] = { ',', '/', '\\', '<', '>', ':', '"', '|', '?', '*', '™', '©', '®' };
 
@@ -132,26 +151,28 @@ static inline bool isASCII(const u16& t)
 
 std::string util::getIslandNameASCII(u64 playerAddr)
 {
-	//0x16 byte = 0xB wide-chars/uint_16
 	u16 name[0xB] = { 0 };
 	u16 namechar;
 	u8 lastchar = 0;
 
-	for (u8 i = 0; i < 0xB; i++) {
+	//0xB - 0x1 bc we dont need the 0x2 to determine the end of the string.
+	for (u8 i = 0; i < 0xA; i++) {
 		dmntchtReadCheatProcessMemory(playerAddr + PersonalID + 0x4 + (i * 0x2), &namechar, 0x2);
 		//make sure we can use this fuck string in a path
-		if (isASCII(namechar) && !isVerboten(namechar)) {
+		if ((isASCII(namechar) && !isVerboten(namechar)) || namechar == 0) {
 			name[i] = namechar;
 			lastchar = i;
 		}
 		else {
-			name[i] = 0x0000;
+			printf("invalid char in island name: 0x%02X\n", namechar);
+			name[i] = 0x005F;
 		}
 	}
 	//make sure there is no space on path ends
 	if (name[lastchar] == 0x20) {
 		name[lastchar] = 0x0000;
 	}
+
 	//nullterminator pain
 	u8 name_string[0x16] = { 0 };
 	//pain

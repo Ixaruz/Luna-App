@@ -50,6 +50,9 @@ namespace dbk {
         u32 g_screen_width;
         u32 g_screen_height;
 
+        static u64 tid = 0, bid = 0, pid = 0;
+        static bool isSupportedVersion = false;
+
         static u64 g_last_ns = 0;
         static u64 g_frame_counter = 0;
         static u64 g_last_ft = 0;
@@ -487,8 +490,9 @@ namespace dbk {
 
         u32 dreamstrval;
         u16 IsDreamingBed = 0;
+
         //[[[[main+4BAEF28]+10]+130]+10]
-        u64 mainAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
+        u64 mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
         
         Check chkres = CheckTemplateFiles(std::string(LUNA_TEMPLATE_DIR), mainAddr);
         if (chkres.check_result != CheckResult::Success) {
@@ -498,21 +502,12 @@ namespace dbk {
             if (chkres.check_result == CheckResult::NotEnoughPlayers) ErrorNotEnoughPlayers(chkres.additional_info);
             return;
         }
-        
-        /*perform all the other checks after validating the Template*/
-        u64 tid = 0, bid = 0, pid = 0;
-        pmdmntGetApplicationProcessId(&pid);
-        pminfoGetProgramId(&tid, pid);
+       
         if (tid == 0) {
             ErrorOpenACNH(&tid);
             return;
         }
 
-        DmntCheatProcessMetadata metadata;
-        dmntchtGetCheatProcessMetadata(&metadata);
-        memcpy(&bid, metadata.main_nso_build_id, 0x8);
-        //fix endianess of hash
-        bid = __builtin_bswap64(bid);
 
         bool isACNH = (tid == TID);
 
@@ -521,13 +516,13 @@ namespace dbk {
             return;
         }
 
-        if (std::find(BID.begin(), BID.end(), bid) == BID.end()) {
+        if (!isSupportedVersion) {
             ErrorWrongBID(&bid);
             return;
         }
 
         if (mainAddr == 0x00) {
-            printf("Error: mainAddr");
+            printf("Error: mainAddr\n");
             ErrorSimpCheck();
             return;
         }
@@ -901,8 +896,20 @@ namespace dbk {
 
         dmntchtForceOpenCheatProcess();
 
+        pmdmntGetApplicationProcessId(&pid);
+        pminfoGetProgramId(&tid, pid);
+
+
+        DmntCheatProcessMetadata metadata;
+        dmntchtGetCheatProcessMetadata(&metadata);
+        memcpy(&bid, metadata.main_nso_build_id, 0x8);
+        //fix endianess of hash
+        bid = __builtin_bswap64(bid);
+
+        isSupportedVersion = util::findVersionIndex(bid);
+
         //[[[[main+4BAEF28]+10]+140]+08]
-        u64 playerAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
+        u64 playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 
         /* Change the current menu to the main menu and if there is an island name representable, put it on the dump button. */
         g_current_menu = std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str());
@@ -931,8 +938,8 @@ namespace dbk {
             DrawStar(vg, g_screen_width, g_screen_height, g_starsx[j], g_starsy[j], (0.8f * sin(3.0f /*frequency*/ * t) + 4.0f), (1.2f * sin(3.0f /*frequency*/ * t) + 1.0f));
         }
 
-        dbk::DrawImage(vg, g_screen_width - ImageSize - ImageInset, 0 + ImageInset, ImageSize, ImageSize, 0);
-        dbk::DrawImage(vg, 0, g_screen_height - 320.0f, 340.0f, 340.0f, 1);
+        dbk::DrawImage(vg, g_screen_width - ImageSize - ImageInset, g_screen_height - ImageSize * 1.5F - ImageInset, ImageSize, ImageSize * 1.5F, 1);
+        dbk::DrawImage(vg, ImageInset, ImageInset, ImageSize * 1.12F, ImageSize, 0);
 
 #if DEBUG_OV
         //Draw frametime

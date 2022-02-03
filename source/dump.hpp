@@ -324,7 +324,6 @@ namespace Dump {
 		std::snprintf(path, FS_MAX_PATH, (g_pathOut + "main.dat").c_str());
 		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Read, &md);
 		g_AccountTableBuffer = new u8[g_AccountTableSize];
-		printf("fileoffset Account Table: %lX\n", SaveHeaderSize + GSavePlayerVillagerAccountOffset - GAccountTableOffset);
 		fsFileRead(&md, SaveHeaderSize + GSavePlayerVillagerAccountOffset - GAccountTableOffset, g_AccountTableBuffer, g_AccountTableSize, FsReadOption_None, &bytesread);
 		fsFileClose(&md);
 	}
@@ -335,12 +334,9 @@ namespace Dump {
 		g_progress_percent = progress_percent;
 		g_enable_buttons = enable_buttons;
 		g_dumping_state = dumping_state;
-
 		fsOpenSdCardFileSystem(&g_fsSdmc);
-		addProgress(0.02f);
-		printf("progress: %.2F\n", *g_progress_percent);
 		//[[[[main+4BAEF28]+10]+130]+10]
-		g_mainAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
+		g_mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
 		if (g_mainAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: mainAddr");
 			printf("Error: mainAddr\n");
@@ -350,7 +346,7 @@ namespace Dump {
 #endif
 		}
 		//[[[[main+4BAEF28]+10]+140]+08]
-		g_playerAddr = util::FollowPointerMain(0x4BAEF28, 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
+		g_playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 		if (g_playerAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: playerAddr");
 			printf("Error: playerAddr\n");
@@ -416,7 +412,6 @@ namespace Dump {
 		//reset size in-case it got changed in the latter for loop
 		g_bufferSize = BUFF_SIZE;
 		float progress = g_progress_percent_last_function;
-		printf("1progress: %.2F\n", *g_progress_percent);
 		g_dumping_menu->LogAddLine("Copying island...");
 		for (u64 offset = 0; offset < mainSize; offset += g_bufferSize) {
 			if (g_bufferSize > mainSize - offset)
@@ -594,6 +589,7 @@ namespace Dump {
 			u16 MainmenuCamera1stPersonView; //1450
 			u16 UnlockInterior_CeilingFurniture; //1452
 			u16 FenceRemakeEnable; //1453
+			u16 RcoStorageExpansion_v200_AddLevel; //1458
 			u16 MainmenuTips; //1538
 			u16 UnlockPlayerHair37to47[11] = { 0 }; //1567-1577
 
@@ -618,6 +614,7 @@ namespace Dump {
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1450 * 2), &MainmenuCamera1stPersonView, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1452 * 2), &UnlockInterior_CeilingFurniture, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1453 * 2), &FenceRemakeEnable, sizeof(u16));
+			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1458 * 2), &RcoStorageExpansion_v200_AddLevel, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1538 * 2), &MainmenuTips, sizeof(u16));
 			dmntchtReadCheatProcessMemory(g_playerAddr + (i * playersOffset) + EventFlagsPlayerOffset + (1567 * 2), &UnlockPlayerHair37to47, sizeof(UnlockPlayerHair37to47));
 
@@ -658,7 +655,11 @@ namespace Dump {
 				5000
 			};
 
-			storageSize = storageSizes[houselvl];
+			storageSize = storageSizes[houselvl + RcoStorageExpansion_v200_AddLevel];
+
+			printf("Houselevel player %d: %d\n", i, houselvl);
+			printf("Storage expansion 2.0.0: %d\n", RcoStorageExpansion_v200_AddLevel);
+			printf("resulting storage size: %d\n", storageSize);
 
 			u16 Update200Flags[] = {
 				MainmenuRecipe_v2,						//Be a Chef! DIY Recipes+
@@ -735,6 +736,39 @@ namespace Dump {
 				}
 			}
 
+			printf("AddHairStyle1: %d\n",HairStyleColor[0]);
+			printf("AddHairStyle2: %d\n", HairStyleColor[1]);
+			printf("AddHairStyle3: %d\n", HairStyleColor[2]);
+			printf("HairStyles: 0x%X\n", (HairStyles[0] >> 1) & 7);
+			printf("AddHairStyle4: %d\n", AddHairStyle4);
+			printf("StylishHairStyles: 0x%X\n", (StylishHairStyles[0] >> 6) & 1);
+
+			printf("ItemRingEnable: %d\n", ItemRingEnable);
+			printf("Tool Ring: It's Essential!: 0x%X\n", ToolRingItsEssential[0] & 1);
+
+			printf("GetLicenseGrdStone: %d\n", GetLicenses[0]);
+			printf("GetLicenseGrdBrick: %d\n", GetLicenses[1]);
+			printf("GetLicenseGrdDarkSoil: %d\n", GetLicenses[2]);
+			printf("GetLicenseGrdStonePattern: %d\n", GetLicenses[3]);
+			printf("GetLicenseGrdSand: %d\n", GetLicenses[4]);
+			printf("GetLicenseGrdTile: %d\n", GetLicenses[5]);
+			printf("GetLicenseGrdWood: %d\n", GetLicenses[6]);
+			printf("GetLicenseRiver: %d\n", GetLicenses[7]);
+			printf("GetLicenseCliff: %d\n", GetLicenses[8]);
+
+			u16 perms;
+			memcpy(&perms, PermitsandLicenses, sizeof(perms));
+			printf("PermitsandLicenses: 0x%X\n", (perms >> (0x2245 % 8)) & 0x1FF);
+
+			printf("UnlockMyDesignProCategory: %d\n", UnlockMyDesignProCategory);
+			printf("Custom Design Pro Editor: 0x%X\n", (CustomDesignProEditor[0] >> (0x2F99 % 8)) & 1);
+			printf("UnlockMydesignPro2: %d\n", UnlockMydesignPro2);
+			printf("Custom Design Pro Editor Plus: 0x%X\n", (CustomDesignProEditorPlus[0] >> (0x338B % 8)) & 1);
+
+			printf("AddBodyColor: %d\n", AddHalloweenColor[0]);
+			printf("AddEyeColor: %d\n", AddHalloweenColor[1]);
+			printf("AddCheekColor: %d\n", AddHalloweenColor[2]);
+			printf("Halloween Character Colors: 0x%X\n", (HalloweenCharacterColors[0] >> (0x33C8 % 8)) & 0x7);
 #if DEBUG
 			/*
 			g_dumping_menu->LogAddLine("AddHairStyle1: " + std::to_string(HairStyleColor[0]));
@@ -782,6 +816,7 @@ namespace Dump {
 			g_dumping_menu->LogAddLine("Ultimate Pocket Stuffing Guide: " + std::to_string(((ReceivedItemPocket40 >> 4) & 1)));
 			g_dumping_menu->LogAddLine("ExpandBaggage: " + std::to_string(ExpandBaggage));
 			g_dumping_menu->LogAddLine("Houselvl: " + std::to_string(houselvl));
+			g_dumping_menu->LogAddLine("Storage expansion 2.0.0: " + std::to_string(RcoStorageExpansion_v200_AddLevel));
 			g_dumping_menu->LogAddLine("StorageSize: " + std::to_string(storageSize));
 #endif
 

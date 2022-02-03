@@ -60,6 +60,8 @@ extern const std::map<u16, u16> TownfruitSmoothiesMap;
 
 extern const std::vector<u64> BID;
 
+extern const std::vector<u64> VersionPointerOffset;
+
 class FileHashRegion
 {
 public:
@@ -79,8 +81,12 @@ struct IslandName {
     u16 name[0xB];
 };
 
+extern int versionindex;
+
 namespace util
 {
+    //returns true if version is valid
+    bool findVersionIndex(u64 versionBID);
 
     //removes char from C++ string
     void stripChar(char _c, std::string& _s);

@@ -52,7 +52,7 @@ namespace dbk {
         if (vg == NULL)
             return -1;
 
-        char file[] = "romfs:/images/spicydeepfriedmemesv3_1636129930067475.jpg";
+        char file[] = "romfs:/images/FGP4V2tVUAEH2-q.jpg";
         int img = nvgCreateImage(vg, file, 0);
         if (img == 0) {
             printf("Could not load %s.\n", file);
@@ -61,10 +61,10 @@ namespace dbk {
         g_image_handle.push_back(img);
 
 
-        for (int i = 0; i <= 178; i++) {
+        for (int i = 0; i <= 37; i++) {
             char file2[0x100];
-            snprintf(file2, 0x100, "romfs:/images/gif/frame_%03d_delay-0.03s.png", i);
-            int img2 = nvgCreateImage(vg, file2, 0);
+            snprintf(file2, 0x100, "romfs:/images/gif/frame_%02d_delay-0.04s.png", i);
+            int img2 = nvgCreateImage(vg, file2, NVG_IMAGE_NEAREST);
             if (img2 == 0) {
                 printf("Could not load %s.\n", file2);
                 return -1;
@@ -93,19 +93,18 @@ namespace dbk {
     }
 
 
-    void DrawImage(NVGcontext* vg, float x, float y, float w, float h, int imgid) {   
+    void DrawImage(NVGcontext* vg, float x, float y, float w, float h, int imgid) {
         int imgw, imgh;
         NVGpaint imgPaint;
-        nvgImageSize(vg, g_image_handle[imgid], &imgw, &imgh);
         if (imgid == 1) {
-            imgPaint = nvgImagePattern(vg, x, y, w * imgw / imgh, h, 0.0f / 180.0f * NVG_PI, g_image_handle[imgid + ((g_framecounter/2) % 179)], 1);
+            imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * NVG_PI, g_image_handle[imgid + ((g_framecounter/3) % 38)], 1);
             g_framecounter++;
         }
         else {
-            imgPaint = nvgImagePattern(vg, x, y, w * imgw / imgh, h, 0.0f / 180.0f * NVG_PI, g_image_handle[imgid], 1);
+            imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * NVG_PI, g_image_handle[imgid], 1);
         }
         nvgBeginPath(vg);
-        nvgRect(vg, x + (w - (w * imgw / imgh)) / 2, y, w * (imgw / imgh), h);
+        nvgRect(vg, x, y, w, h);
         nvgFillPaint(vg, imgPaint);
         nvgFill(vg);
     }
