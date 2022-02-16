@@ -938,8 +938,8 @@ namespace dbk {
             DrawStar(vg, g_screen_width, g_screen_height, g_starsx[j], g_starsy[j], (0.8f * sin(3.0f /*frequency*/ * t) + 4.0f), (1.2f * sin(3.0f /*frequency*/ * t) + 1.0f));
         }
 
-        dbk::DrawImage(vg, g_screen_width - ImageSize - ImageInset, g_screen_height - ImageSize * 1.5F - ImageInset, ImageSize, ImageSize * 1.5F, 1);
-        dbk::DrawImage(vg, ImageInset, ImageInset, ImageSize * 1.12F, ImageSize, 0);
+        dbk::DrawImage(vg, g_screen_width - ImageSize - ImageInset, g_screen_height - ImageSize /* 1.5F*/ - ImageInset, ImageSize, ImageSize /* 1.5F*/, 1);
+        dbk::DrawImage(vg, ImageInset, ImageInset, ImageSize, ImageSize, 0);
 
 #if DEBUG_OV
         //Draw frametime

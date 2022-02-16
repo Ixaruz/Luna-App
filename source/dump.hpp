@@ -335,7 +335,6 @@ namespace Dump {
 		g_enable_buttons = enable_buttons;
 		g_dumping_state = dumping_state;
 		fsOpenSdCardFileSystem(&g_fsSdmc);
-		//[[[[main+4BAEF28]+10]+130]+10]
 		g_mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
 		if (g_mainAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: mainAddr");
@@ -345,7 +344,6 @@ namespace Dump {
 			return;
 #endif
 		}
-		//[[[[main+4BAEF28]+10]+140]+08]
 		g_playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 		if (g_playerAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: playerAddr");
@@ -569,7 +567,15 @@ namespace Dump {
 			u8 CustomDesignProEditor[sizeof(u8)]; //12185
 			u8 CustomDesignProEditorPlus[sizeof(u8)]; //13195
 			u8 HalloweenCharacterColors[sizeof(u8)]; //13256 - 13258
-			u8 Update200RecipeLicenseApp[sizeof(u8)]; //14691-14695
+			/// <summary>
+			/// 14691-14695
+			/// Be a Chef! DIY Recipes+
+			/// Custom Designs Patterns +
+			///	Pro Decorating License
+			///	Custom Fencing in a Flash
+			///	Pro Camera App
+			/// </summary>
+			u8 Update200RecipeLicenseApp[sizeof(u8)];
 			u8 IslandLife101Service[sizeof(u8)]; //14796
 			u8 Top4FabHairstyles[sizeof(u8)]; //14829
 

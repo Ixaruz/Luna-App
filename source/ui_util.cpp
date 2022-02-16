@@ -52,7 +52,7 @@ namespace dbk {
         if (vg == NULL)
             return -1;
 
-        char file[] = "romfs:/images/FGP4V2tVUAEH2-q.jpg";
+        char file[] = "romfs:/images/vcajq8hh22h81.jpg";
         int img = nvgCreateImage(vg, file, 0);
         if (img == 0) {
             printf("Could not load %s.\n", file);
@@ -61,10 +61,10 @@ namespace dbk {
         g_image_handle.push_back(img);
 
 
-        for (int i = 0; i <= 37; i++) {
+        for (int i = 0; i <= 32; i++) {
             char file2[0x100];
-            snprintf(file2, 0x100, "romfs:/images/gif/frame_%02d_delay-0.04s.png", i);
-            int img2 = nvgCreateImage(vg, file2, NVG_IMAGE_NEAREST);
+            snprintf(file2, 0x100, "romfs:/images/gif/frame_%02d_delay-0.11s.png", i);
+            int img2 = nvgCreateImage(vg, file2, 0);
             if (img2 == 0) {
                 printf("Could not load %s.\n", file2);
                 return -1;
@@ -97,7 +97,7 @@ namespace dbk {
         int imgw, imgh;
         NVGpaint imgPaint;
         if (imgid == 1) {
-            imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * NVG_PI, g_image_handle[imgid + ((g_framecounter/3) % 38)], 1);
+            imgPaint = nvgImagePattern(vg, x, y, w, h, 0.0f / 180.0f * NVG_PI, g_image_handle[imgid + ((g_framecounter/8) % 33)], 1);
             g_framecounter++;
         }
         else {
