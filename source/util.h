@@ -110,6 +110,8 @@ namespace util
     void SetFlag(u8* Data, int bitIndex, u16 value);
 
     std::string GetLastTimeSaved(u64 mainAddr);
+    
+    u32 GetWeatherRandomSeed(u64 mainAddr);
 
     bool isServiceRunning(const char* serviceName);
 

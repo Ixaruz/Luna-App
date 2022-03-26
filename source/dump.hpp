@@ -371,6 +371,9 @@ namespace Dump {
 		g_pathOut += "/" + std::string(dreamtime);
 		mkdir(g_pathOut.c_str(), 0777);
 		g_dumping_menu->LogAddLine(std::string(dreamtime));
+		u32 randweather = util::GetWeatherRandomSeed(g_mainAddr);
+		printf("randweatherseed: %d", randweather);
+		g_dumping_menu->LogAddLine("Weather Seed: " + std::to_string(util::GetWeatherRandomSeed(g_mainAddr)));
 		g_pathOut += "/";
 
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsDecrypt;

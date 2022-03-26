@@ -268,7 +268,7 @@ namespace dbk {
         nvgText(vg, x + w * 0.5f - tw * 0.5f, y + 45.0f, title, nullptr);
     }
 
-    void DrawButton(NVGcontext *vg, const char *text, float x, float y, float w, float h, ButtonStyle style, u64 ns) {
+    void DrawButton(NVGcontext *vg, const char *text, float x, float y, float w, float h, ButtonStyle style, u64 ns, float fontsize) {
         /* Fill the background if selected. */
         if (style == ButtonStyle::StandardSelected || style == ButtonStyle::FileSelectSelected) {
             NVGpaint bg_paint = nvgLinearGradient(vg, x, y + h / 2.0f, x + w, y + h / 2.0f, nvgRGB(46, 64, 139), GetSelectionRGB2(ns));
@@ -291,7 +291,7 @@ namespace dbk {
         }
 
         /* Setup the font. */
-        nvgFontSize(vg, 20.0f);
+        nvgFontSize(vg, fontsize);
         nvgAddFallbackFont(vg, SwitchStandardFont, SwitchExtFont);
         nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 

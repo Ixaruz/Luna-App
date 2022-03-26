@@ -150,35 +150,262 @@ static inline bool isASCII(const u16& t)
 	return (t > 31 && t < 127);
 }
 
+enum class JapFlag {
+	normal,
+	small,
+};
+
+struct JapLetter {
+	u16 UCS;
+	const char* romaji;
+	JapFlag flag = JapFlag::normal;
+
+};
+
+const std::vector<JapLetter> JAP = {
+	{0x3041, "A", JapFlag::small},
+	{0x3042, "A"},
+	{0x3043, "I", JapFlag::small},
+	{0x3044, "I"},
+	{0x3045, "U", JapFlag::small},
+	{0x3046, "U"},
+	{0x3047, "E", JapFlag::small},
+	{0x3048, "E"},
+	{0x3049, "O", JapFlag::small},
+	{0x304A, "O"},
+	{0x304B, "KA"},
+	{0x304C, "GA"},
+	{0x304D, "KI"},
+	{0x304E, "GI"},
+	{0x304F, "KU"},
+	{0x3050, "GU"},
+	{0x3051, "KE"},
+	{0x3052, "GE"},
+	{0x3053, "KO"},
+	{0x3054, "GO"},
+	{0x3055, "SA"},
+	{0x3056, "ZA"},
+	{0x3057, "SI"},
+	{0x3058, "ZI"},
+	{0x3059, "SU"},
+	{0x305A, "ZU"},
+	{0x305B, "SE"},
+	{0x305C, "ZE"},
+	{0x305D, "SO"},
+	{0x305E, "ZO"},
+	{0x305F, "TA"},
+	{0x3060, "DA"},
+	{0x3061, "TI"},
+	{0x3062, "DI"},
+	{0x3063, "TU", JapFlag::small},
+	{0x3064, "TU"},
+	{0x3065, "DU"},
+	{0x3066, "TE"},
+	{0x3067, "DE"},
+	{0x3068, "TO"},
+	{0x3069, "DO"},
+	{0x306A, "NA"},
+	{0x306B, "NI"},
+	{0x306C, "NU"},
+	{0x306D, "NE"},
+	{0x306E, "NO"},
+	{0x306F, "HA"},
+	{0x3070, "BA"},
+	{0x3071, "PA"},
+	{0x3072, "HI"},
+	{0x3073, "BI"},
+	{0x3074, "PI"},
+	{0x3075, "HU"},
+	{0x3076, "BU"},
+	{0x3077, "PU"},
+	{0x3078, "HE"},
+	{0x3079, "BE"},
+	{0x307A, "PE"},
+	{0x307B, "HO"},
+	{0x307C, "BO"},
+	{0x307D, "PO"},
+	{0x307E, "MA"},
+	{0x307F, "MI"},
+	{0x3080, "MU"},
+	{0x3081, "ME"},
+	{0x3082, "MO"},
+	{0x3083, "YA", JapFlag::small},
+	{0x3084, "YA"},
+	{0x3085, "YU", JapFlag::small},
+	{0x3086, "YU"},
+	{0x3087, "YO", JapFlag::small},
+	{0x3088, "YO"},
+	{0x3089, "RA"},
+	{0x308A, "RI"},
+	{0x308B, "RU"},
+	{0x308C, "RE"},
+	{0x308D, "RO"},
+	{0x308E, "WA", JapFlag::small},
+	{0x308F, "WA"},
+	{0x3090, "WI"},
+	{0x3091, "WE"},
+	{0x3092, "WO"},
+	{0x3093, "N"},
+	{0x30A1, "A", JapFlag::small},
+	{0x30A2, "A"},
+	{0x30A3, "I", JapFlag::small},
+	{0x30A4, "I"},
+	{0x30A5, "U", JapFlag::small},
+	{0x30A6, "U"},
+	{0x30A7, "E", JapFlag::small},
+	{0x30A8, "E"},
+	{0x30A9, "O", JapFlag::small},
+	{0x30AA, "O"},
+	{0x30AB, "KA"},
+	{0x30AC, "GA"},
+	{0x30AD, "KI"},
+	{0x30AE, "GI"},
+	{0x30AF, "KU"},
+	{0x30B0, "GU"},
+	{0x30B1, "KE"},
+	{0x30B2, "GE"},
+	{0x30B3, "KO"},
+	{0x30B4, "GO"},
+	{0x30B5, "SA"},
+	{0x30B6, "ZA"},
+	{0x30B7, "SI"},
+	{0x30B8, "ZI"},
+	{0x30B9, "SU"},
+	{0x30BA, "ZU"},
+	{0x30BB, "SE"},
+	{0x30BC, "ZE"},
+	{0x30BD, "SO"},
+	{0x30BE, "ZO"},
+	{0x30BF, "TA"},
+	{0x30C0, "DA"},
+	{0x30C1, "TI"},
+	{0x30C2, "DI"},
+	{0x30C3, "TU", JapFlag::small},
+	{0x30C4, "TU"},
+	{0x30C5, "DU"},
+	{0x30C6, "TE"},
+	{0x30C7, "DE"},
+	{0x30C8, "TO"},
+	{0x30C9, "DO"},
+	{0x30CA, "NA"},
+	{0x30CB, "NI"},
+	{0x30CC, "NU"},
+	{0x30CD, "NE"},
+	{0x30CE, "NO"},
+	{0x30CF, "HA"},
+	{0x30D0, "BA"},
+	{0x30D1, "PA"},
+	{0x30D2, "HI"},
+	{0x30D3, "BI"},
+	{0x30D4, "PI"},
+	{0x30D5, "HU"},
+	{0x30D6, "BU"},
+	{0x30D7, "PU"},
+	{0x30D8, "HE"},
+	{0x30D9, "BE"},
+	{0x30DA, "PE"},
+	{0x30DB, "HO"},
+	{0x30DC, "BO"},
+	{0x30DD, "PO"},
+	{0x30DE, "MA"},
+	{0x30DF, "MI"},
+	{0x30E0, "MU"},
+	{0x30E1, "ME"},
+	{0x30E2, "MO"},
+	{0x30E3, "YA", JapFlag::small},
+	{0x30E4, "YA"},
+	{0x30E5, "YU", JapFlag::small},
+	{0x30E6, "YU"},
+	{0x30E7, "YO", JapFlag::small},
+	{0x30E8, "YO"},
+	{0x30E9, "RA"},
+	{0x30EA, "RI"},
+	{0x30EB, "RU"},
+	{0x30EC, "RE"},
+	{0x30ED, "RO"},
+	{0x30EE, "WA", JapFlag::small},
+	{0x30EF, "WA"},
+	{0x30F0, "WI"},
+	{0x30F1, "WE"},
+	{0x30F2, "WO"},
+	{0x30F3, "N"},
+	{0x30F4, "VU"},
+	{0x30F5, "KA", JapFlag::small},
+	{0x30F6, "KE", JapFlag::small},
+};
+
+int getelementindex(std::vector<JapLetter> v, u16 val) {
+	auto p = std::find_if( //find() ask for a value, use find_if() for condition
+		v.begin(),
+		v.end(),
+		[val](const JapLetter& vi) //you want to compare an item
+		{return vi.UCS == val; }
+	);
+	return (int)(p - v.begin());
+}
+
+static bool isJAP(const u16& t) {
+	return (t == 0x30FC || t >= 0x3041 && t <= 0x30F6);
+}
+
+static bool isKANA(const u16& t) {
+	return (t > 0x30A1);
+}
 
 std::string util::getIslandNameASCII(u64 playerAddr)
 {
-	u16 name[0xB] = { 0 };
-	u16 namechar;
-	u8 lastchar = 0;
+	u16 name[0xB*2] = { 0 };
+	u16 namechar, lastchar;
+	u8 lastvalidindex = 0;
+	int currentoffset = 0;
 
 	//0xB - 0x1 bc we dont need the 0x2 to determine the end of the string.
 	for (u8 i = 0; i < 0xA; i++) {
 		dmntchtReadCheatProcessMemory(playerAddr + PersonalID + 0x4 + (i * 0x2), &namechar, 0x2);
 		//make sure we can use this fuck string in a path
 		if ((isASCII(namechar) && !isVerboten(namechar)) || namechar == 0) {
-			name[i] = namechar;
-			lastchar = i;
+			name[i + currentoffset] = namechar;
 		}
 		else {
-			printf("invalid char in island name: 0x%02X\n", namechar);
-			name[i] = 0x005F;
+			if (isJAP(namechar)) {
+				JapLetter currentletter = JAP[getelementindex(JAP, namechar)];
+				const char* japeqiv = currentletter.romaji;
+				//sokuon deez nuts
+				currentoffset -= (currentoffset == 0)? 0 : (int)currentletter.flag;
+				name[i + currentoffset] = *japeqiv;
+				if (std::strlen(japeqiv) == 2) {
+					name[i + currentoffset + 1] = *(japeqiv + 1);
+					currentoffset++;
+				}
+			}
+			//chouon deez nuts
+			else if (namechar == 0x30FC && isJAP(lastchar) && isKANA(lastchar)) {
+				name[i + currentoffset] = name[i + currentoffset - 1];
+				
+			}
+			else {
+				printf("invalid letter: 0x%04X\n", namechar);
+				name[i + currentoffset] = 0x005F;
+			}
 		}
+		lastchar = namechar;
+		lastvalidindex = i + currentoffset;
 	}
+	
 	//make sure there is no space on path ends
-	if (name[lastchar] == 0x20) {
-		name[lastchar] = 0x0000;
+	if (name[lastvalidindex] == 0x20) {
+		name[lastvalidindex] = 0x0000;
 	}
 
 	//nullterminator pain
-	u8 name_string[0x16] = { 0 };
+	u8 name_string[0x16*2] = { 0 };
 	//pain
 	utf16_to_utf8(name_string, name, sizeof(name_string) / sizeof(u8));
+
+	for (int i = 0; i < sizeof(name_string); i++) {
+		printf("%c", name_string[i]);
+	}
+	printf("\n");
 
 	return std::string((char*)name_string);
 }
@@ -299,6 +526,12 @@ std::string util::GetLastTimeSaved(u64 mainAddr)
 	sprintf(ret, date_format, time.day, time.month, time.year, time.hour, time.minute);
 	return (std::string(ret));
 
+}
+
+u32 util::GetWeatherRandomSeed(u64 mainAddr) {
+	u32 randomweatherseed;
+	dmntchtReadCheatProcessMemory(mainAddr + 0x1e35f0 + 0x18, &randomweatherseed, 0x4);
+	return randomweatherseed;
 }
 
 bool util::isServiceRunning(const char* serviceName) {

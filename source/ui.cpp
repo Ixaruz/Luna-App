@@ -317,8 +317,9 @@ namespace dbk {
             if (button->enabled) {
                 style = button->selected ? ButtonStyle::StandardSelected : ButtonStyle::Standard;
             }
-
-            DrawButton(vg, button->text, button->x, button->y, button->w, button->h, style, ns);
+            float fontsize = 20.0f;
+            if ((strlen(button->text) * fontsize/1.25f) > button->w) fontsize = button->w * 1.25f / strlen(button->text);
+            DrawButton(vg, button->text, button->x, button->y, button->w, button->h, style, ns, fontsize);
         }
     }
 
@@ -546,7 +547,7 @@ namespace dbk {
     MainMenu::MainMenu(const char *islandname) : Menu(nullptr) {
         const float x = g_screen_width / 2.0f - WindowWidth / 2.0f;
         const float y = g_screen_height / 2.0f - WindowHeight / 2.0f;
-        char dump_button_text[0x12];
+        char dump_button_text[0x1C];
         snprintf(dump_button_text, sizeof(dump_button_text), " Dump %s", islandname);
 
         this->AddButton(DumpButtonId, dump_button_text, x + HorizontalInset, y + TitleGap, WindowWidth - HorizontalInset * 2, ButtonHeight);
