@@ -7,8 +7,8 @@
 #include <map>
 #include <cstdlib>
 #include <sys/stat.h>
-#include "helpers\dmnt\dmntcht.h"
-#include "helpers\debugger\debugger.hpp"
+#include "helpers/dmnt/dmntcht.h"
+#include "helpers/debugger/debugger.hpp"
 #include <switch.h>
 #include <thread>
 #include <chrono>

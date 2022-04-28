@@ -1,6 +1,6 @@
 #pragma once
 #include <switch.h>
-#include "helpers\file\file.h"
+#include "helpers/file/file.h"
 #include "util.h"
 
 typedef struct {
