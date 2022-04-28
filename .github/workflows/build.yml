@@ -1,4 +1,5 @@
 # build.yml
+name: Build
 on:
   push:
     branches: [ main ]
