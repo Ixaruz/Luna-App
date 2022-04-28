@@ -153,6 +153,7 @@ static inline bool isASCII(const u16& t)
 enum class JapFlag {
 	normal,
 	small,
+	sokuon,
 };
 
 struct JapLetter {
@@ -185,8 +186,8 @@ const std::vector<JapLetter> JAP = {
 	{0x3054, "GO"},
 	{0x3055, "SA"},
 	{0x3056, "ZA"},
-	{0x3057, "SI"},
-	{0x3058, "ZI"},
+	{0x3057, "SHI"},
+	{0x3058, "JI"},
 	{0x3059, "SU"},
 	{0x305A, "ZU"},
 	{0x305B, "SE"},
@@ -195,11 +196,11 @@ const std::vector<JapLetter> JAP = {
 	{0x305E, "ZO"},
 	{0x305F, "TA"},
 	{0x3060, "DA"},
-	{0x3061, "TI"},
-	{0x3062, "DI"},
-	{0x3063, "TU", JapFlag::small},
-	{0x3064, "TU"},
-	{0x3065, "DU"},
+	{0x3061, "CHI"},
+	{0x3062, "JI"},
+	{0x3063, "TSU", JapFlag::sokuon},
+	{0x3064, "TSU"},
+	{0x3065, "ZU"},
 	{0x3066, "TE"},
 	{0x3067, "DE"},
 	{0x3068, "TO"},
@@ -215,7 +216,7 @@ const std::vector<JapLetter> JAP = {
 	{0x3072, "HI"},
 	{0x3073, "BI"},
 	{0x3074, "PI"},
-	{0x3075, "HU"},
+	{0x3075, "FU"},
 	{0x3076, "BU"},
 	{0x3077, "PU"},
 	{0x3078, "HE"},
@@ -268,8 +269,8 @@ const std::vector<JapLetter> JAP = {
 	{0x30B4, "GO"},
 	{0x30B5, "SA"},
 	{0x30B6, "ZA"},
-	{0x30B7, "SI"},
-	{0x30B8, "ZI"},
+	{0x30B7, "SHI"},
+	{0x30B8, "JI"},
 	{0x30B9, "SU"},
 	{0x30BA, "ZU"},
 	{0x30BB, "SE"},
@@ -278,10 +279,10 @@ const std::vector<JapLetter> JAP = {
 	{0x30BE, "ZO"},
 	{0x30BF, "TA"},
 	{0x30C0, "DA"},
-	{0x30C1, "TI"},
-	{0x30C2, "DI"},
-	{0x30C3, "TU", JapFlag::small},
-	{0x30C4, "TU"},
+	{0x30C1, "CHI"},
+	{0x30C2, "JI"},
+	{0x30C3, "TSU", JapFlag::sokuon},
+	{0x30C4, "TSU"},
 	{0x30C5, "DU"},
 	{0x30C6, "TE"},
 	{0x30C7, "DE"},
@@ -298,7 +299,7 @@ const std::vector<JapLetter> JAP = {
 	{0x30D2, "HI"},
 	{0x30D3, "BI"},
 	{0x30D4, "PI"},
-	{0x30D5, "HU"},
+	{0x30D5, "FU"},
 	{0x30D6, "BU"},
 	{0x30D7, "PU"},
 	{0x30D8, "HE"},
@@ -345,19 +346,22 @@ int getelementindex(std::vector<JapLetter> v, u16 val) {
 }
 
 static bool isJAP(const u16& t) {
-	return (t == 0x30FC || t >= 0x3041 && t <= 0x30F6);
+	return (t >= 0x3041 && t <= 0x30F6);
 }
 
-static bool isKANA(const u16& t) {
+static bool isKATAKANA(const u16& t) {
 	return (t > 0x30A1);
 }
 
 std::string util::getIslandNameASCII(u64 playerAddr)
 {
 	u16 name[0xB*2] = { 0 };
-	u16 namechar, lastchar;
+	u16 namechar = 0, lastchar = 0;
+	JapLetter lastletter = {0x0000, "\0"};
 	u8 lastvalidindex = 0;
 	int currentoffset = 0;
+	int currentletteroffset = 0;
+	static bool lastwassokuon = false;
 
 	//0xB - 0x1 bc we dont need the 0x2 to determine the end of the string.
 	for (u8 i = 0; i < 0xA; i++) {
@@ -368,18 +372,53 @@ std::string util::getIslandNameASCII(u64 playerAddr)
 		}
 		else {
 			if (isJAP(namechar)) {
+				currentletteroffset = 0;
 				JapLetter currentletter = JAP[getelementindex(JAP, namechar)];
-				const char* japeqiv = currentletter.romaji;
-				//sokuon deez nuts
-				currentoffset -= (currentoffset == 0)? 0 : (int)currentletter.flag;
-				name[i + currentoffset] = *japeqiv;
-				if (std::strlen(japeqiv) == 2) {
-					name[i + currentoffset + 1] = *(japeqiv + 1);
-					currentoffset++;
+				if (currentletter.flag != JapFlag::sokuon) {
+					const char* romeqiv = currentletter.romaji;
+					//chouon deez nuts
+					if (i != 0 || currentoffset != 0) {
+						//check if the last character isn't the current vowel (ga + a = gaa)
+						if (name[i + currentoffset - 1] != *romeqiv) {
+							currentoffset -= (int)currentletter.flag;
+						}
+						//special cases of ya, yu, yo with shi, chi and ji (= sha, shu, sho)
+						if (currentletter.flag == JapFlag::small) {
+							if (currentletter.UCS >= 0x30E3 && currentletter.UCS <= 0x30E7) {
+								if (lastletter.UCS == 0x30B7 || lastletter.UCS == 0x30B8 || lastletter.UCS == 0x30C1 || lastletter.UCS == 0x30C2) {
+									//remove first letter (being 'y')
+									currentletteroffset = 1;
+								}
+							}
+							if (currentletter.UCS >= 0x3083 && currentletter.UCS <= 0x3087) {
+								if (lastletter.UCS == 0x3057 || lastletter.UCS == 0x3058 || lastletter.UCS == 0x3061 || lastletter.UCS == 0x3062) {
+									//remove first letter (being 'y')
+									currentletteroffset = 1;
+								}
+							}
+						}
+					}
+					//sokuon deez nuts
+					//take the consonant and put it in the last letter spot
+					if (lastwassokuon) {
+						name[i + currentoffset - 1] = *(romeqiv + currentletteroffset);
+						lastwassokuon = false;
+					}
+					name[i + currentoffset] = *(romeqiv + currentletteroffset);
+					//this runs when the romaji equivalent is longer than 1 character
+					for (size_t j = 1; j < std::strlen(romeqiv + currentletteroffset); j++) {
+						currentoffset++;
+						name[i + currentoffset] = *(romeqiv + currentletteroffset + j);
+					}
 				}
+				else {
+					lastwassokuon = true;
+				}
+				lastletter = currentletter;
 			}
-			//chouon deez nuts
-			else if (namechar == 0x30FC && isJAP(lastchar) && isKANA(lastchar)) {
+			//chouon deez nuts 
+			//the elongation symbol is only used in KATAKANA
+			else if (namechar == 0x30FC && isJAP(lastchar) && isKATAKANA(lastchar)) {
 				name[i + currentoffset] = name[i + currentoffset - 1];
 				
 			}
