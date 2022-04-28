@@ -66,7 +66,7 @@ OUT_SHADERS	:=	shaders
 
 APP_TITLE     := Luna
 APP_AUTHOR    := Ixaruz
-APP_VERSION   := 0.6.11
+APP_VERSION   := 0.6.12
 
 #---------------------------------------------------------------------------------
 # options for code generation

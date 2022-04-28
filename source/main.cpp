@@ -211,10 +211,6 @@ class Luna : public CApplication {
 
             nvgCreateFontMem(m_vg, "switch-ext", static_cast<u8*>(font.address), font.size, 0);
             m_standard_font = nvgAddFallbackFont(m_vg, "switch-standard", "switch-ext");
-
-            if (dbk::loadData(m_vg) == -1) {
-                printf("Failed to load data!\n");
-            }
         }
 
         ~Luna() {
