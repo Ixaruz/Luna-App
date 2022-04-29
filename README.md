@@ -1,10 +1,10 @@
 ![Banner](bannerslim.png?raw=true)
 =====
-![2.0.0](https://img.shields.io/badge/Version-2.0.0-20306a) ![2.0.1](https://img.shields.io/badge/Version-2.0.1-20306a) ![2.0.2](https://img.shields.io/badge/Version-2.0.2-20306a) ![2.0.3](https://img.shields.io/badge/Version-2.0.3-20306a) ![2.0.4](https://img.shields.io/badge/Version-2.0.4-20306a) ![2.0.5](https://img.shields.io/badge/Version-2.0.5-20306a)  
+[![2.0.0](https://img.shields.io/badge/Version-2.0.0-20306a)](#) [![2.0.1](https://img.shields.io/badge/Version-2.0.1-20306a)](#) [![2.0.2](https://img.shields.io/badge/Version-2.0.2-20306a)](#) [![2.0.3](https://img.shields.io/badge/Version-2.0.3-20306a)](#) [![2.0.4](https://img.shields.io/badge/Version-2.0.4-20306a)](#) [![2.0.5](https://img.shields.io/badge/Version-2.0.5-20306a)](#)  
 Luna is a homebrew app designed to dump Animal Crossing: New Horizons islands you visit.
 
 ## Disclaimer & License
-![License](https://img.shields.io/badge/License-GPLv3-blue.svg)
+[![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Ixaruz/Luna-App/blob/main/LICENSE)
 - Luna is not affiliated with, endorsed or approved by Nintendo or Animal Crossing: New Horizons in any way.
 - Luna is distributed in the hope that it will be useful, but **WITHOUT ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. *See the GNU General Public License for more details.*
 
@@ -16,7 +16,7 @@ Luna is a homebrew app designed to dump Animal Crossing: New Horizons islands yo
 
 ### Installation
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ixaruz/Luna-App?label=Release)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Ixaruz/Luna-App?label=Release)](https://github.com/Ixaruz/Luna-App/releases/latest)
 [![Actions Status](https://github.com/Ixaruz/Luna-App/workflows/Build/badge.svg)](https://github.com/Ixaruz/Luna-App/actions)
 
 Head to the release page and download the latest released luna.zip and extract it onto your Switch's SD card.   
@@ -62,9 +62,9 @@ If everything went right, you now have a dumped island, which can be used by the
   
 ## TO-DO:
 - [x] write documentation
-- [ ] publish source code
+- [x] publish source code
 - [ ] ???
-- [ ] release
+- [x] release
   
 ## Credits
 Thanks to:
