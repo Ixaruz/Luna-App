@@ -12,15 +12,26 @@ jobs:
     container: 
        image: devkitpro/devkita64
     steps:
-      - name: Checkout repo
+      - name: checkout repo
         uses: actions/checkout@v3
       - name: Checkout submodules
         run: git submodule update --init --recursive
       - name: build application
         run: |
           make
-      - name: upload em artifacts
+      - name: Ready artifacts
+        run: |
+          mkdir -p switch
+          mkdir -p config/luna/dump
+          mkdir -p config/luna/enctemplate
+          mv luna.nro switch
+          touch config/luna/dump/.dumps
+          touch config/luna/enctemplate/.template
+          ls -a
+      - name: Upload em artifacts
         uses: actions/upload-artifact@v3
         with:
           name: luna
-          path: luna.nro
+          path: |
+            switch
+            config
