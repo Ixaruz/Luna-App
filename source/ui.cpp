@@ -467,7 +467,7 @@ namespace dbk {
     }
 
     void ErrorSimpCheck() {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE008", "You didnt pass", "the simp check.", 1));
+        ChangeMenu(std::make_shared<ErrorMenu>("\uE00A", "No island was found.", "Please try again?", 1));
     }
 
     void ErrorNoTemplate() {
