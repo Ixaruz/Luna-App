@@ -81,12 +81,15 @@ Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = 
             continue;
         }
 
-        if (list.isDir(i)) {
+
+        if (list.getItemExt(i) != "dat") {
             maskeditemscount++;
-            std::string tobechecked = path + list.getItem(i) + "/";
-            chkres = CheckTemplateFiles(tobechecked, mainAddr, true);
-            if (chkres.check_result != CheckResult::Success) {
-                return chkres;
+            if (list.isDir(i)) {
+                std::string tobechecked = path + list.getItem(i) + "/";
+                chkres = CheckTemplateFiles(tobechecked, mainAddr, true);
+                if (chkres.check_result != CheckResult::Success) {
+                    return chkres;
+                }
             }
         }
 
