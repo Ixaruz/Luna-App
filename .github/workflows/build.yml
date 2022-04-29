@@ -22,5 +22,5 @@ jobs:
       - name: upload em artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: luna.nro
+          name: luna
           path: luna.nro
