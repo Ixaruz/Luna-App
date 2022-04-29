@@ -27,7 +27,6 @@ jobs:
           mv luna.nro switch
           touch config/luna/dump/.dumps
           touch config/luna/enctemplate/.template
-          ls -a
       - name: Upload em artifacts
         uses: actions/upload-artifact@v3
         with:
