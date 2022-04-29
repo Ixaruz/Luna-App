@@ -23,7 +23,7 @@ Head to the release page and download the latest released luna.zip and extract i
 Luna requires a save-file-template to work. either use your own save file<sup>[1]</sup> or use the included [enctemplate.zip](enctemplate.zip) and unzip it in   `SD:/config/luna/enctemplate`.
 
 <br>
-<sup>[1]</sup><smaller>under the requirement, that it has the same amount of players as the island you are trying to dump.
+<sup>[1]</sup><smaller>under the requirement, that it has the same amount of players (or more) as the island you are trying to dump.
 
 ## Usage
 
