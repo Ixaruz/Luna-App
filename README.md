@@ -31,7 +31,7 @@ When visiting an island, whether it being a dream or a friend's island, open the
 It will show you the option to dump the current island and should also display their name.
 
 Now press the Dump button and let it work for a few seconds.
-If everything went right, you now have a dumped island, which can be used by the game and tools like NHSE, in the dump folder of your Switch's SD card.
+If everything went right, you now have a dumped island in the dump folder, which can be used by the game and tools like NHSE.
 
 ## File Tree
 
