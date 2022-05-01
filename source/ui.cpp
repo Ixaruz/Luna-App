@@ -541,6 +541,7 @@ namespace dbk {
 
         g_dumping_menu = std::make_shared<DumpingMenu>(g_current_menu);
         ChangeMenu(g_dumping_menu);
+        g_dumpstart_ft = ns;
         return;
     }
 
@@ -701,12 +702,12 @@ namespace dbk {
         g_editinglog = false;
     }
 
-    Result DumpingMenu::TransitionDumpState() {
+    Result DumpingMenu::TransitionDumpState(u64 ns) {
         Result rc = 0;
         if (m_dumping_state == DumpState::NeedsSetup) {
    
             //std::thread decrypt = std::thread([this]() {(Dump::Decryptshizfile(g_current_menu, &this->m_progress_percent)); });
-            dump = std::thread([this]() { (Dump::Setup(g_dumping_menu, &this->m_progress_percent, &this->m_enable_buttons, &this->m_dumping_state)); });
+            dump = std::thread([this]() { (Dump::Setup(g_dumping_menu, &this->m_progress_nextPercent, &this->m_enable_buttons, &this->m_dumping_state)); });
             m_dumping_state = DumpState::NeedsWait;
         }
         else if (m_dumping_state == DumpState::NeedsDecrypt) {
@@ -730,6 +731,9 @@ namespace dbk {
             dump.join();
             dump = std::thread([]() { (Dump::Save()); });
             m_dumping_state = DumpState::NeedsWait;
+        }
+        else if (m_dumping_state == DumpState::End) {
+            dump.join();
         }
 
         return rc;
@@ -786,6 +790,22 @@ namespace dbk {
             }
         }
 
+        
+        if (m_progress_percent != m_progress_nextPercent) {
+            if (m_progress_percent < m_progress_nextPercent) {
+                m_progress_percent += ceil((m_progress_nextPercent - m_progress_percent) * 100) / 300;
+                if (m_progress_percent >= m_progress_nextPercent) {
+                    m_progress_percent = m_progress_nextPercent;
+                }
+            }
+            if (m_progress_percent > m_progress_nextPercent) {
+                m_progress_percent += floor((m_progress_nextPercent - m_progress_percent) * 100) / 300;
+                if (m_progress_percent <= m_progress_nextPercent) {
+                    m_progress_percent = m_progress_nextPercent;
+                }
+            }
+        }
+
         u64 k_down = padGetButtonsDown(&g_pad);
 
         //since we only have one button:
@@ -825,7 +845,7 @@ namespace dbk {
         if (this->m_logHeight > this->TextAreaHeight) {
             //add scrollbar here
             float paddingtopbottom = 10.0f;
-            float scrollbarHeight = this->TextAreaHeight * (this->TextAreaHeight + this->LogRowHorizontalInset) / this->m_logHeight;
+            float scrollbarHeight = (this->TextAreaHeight * (this->TextAreaHeight + this->LogRowHorizontalInset) / this->m_logHeight) - paddingtopbottom*2;
             if (scrollbarHeight < 10.0f) scrollbarHeight = 10.0f;
             float TextBackgroundOffset = y + TitleGap + ProgressTextHeight + ProgressBarHeight + VerticalGap + LogPadding;
             //value between 0.0f and 1.0f
@@ -840,7 +860,6 @@ namespace dbk {
         this->DrawButtons(vg, ns);
 
         if (m_dumping_state == DumpState::NeedsDraw) {
-            //gonna put save check here or something?
             m_dumping_state = DumpState::NeedsSetup;
         }
     }

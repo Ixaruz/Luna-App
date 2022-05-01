@@ -242,6 +242,7 @@ namespace dbk {
         AsyncResult m_prepare_result;
         Debugger* m_debugger = nullptr;
         float m_progress_percent = 0.0f;
+        float m_progress_nextPercent = 0.0f;
         bool m_enable_buttons = false;
 
         DumpingMenu(std::shared_ptr<Menu> prev_menu);

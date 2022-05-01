@@ -29,6 +29,7 @@ namespace Dump {
 		std::string g_TemplateIn = std::string(LUNA_TEMPLATE_DIR);
 		std::string g_pathOut = std::string(LUNA_DUMP_DIR);
 		FsFileSystem g_fsSdmc;
+		int g_datcount = 0;
 
 		static std::vector<std::string> g_pathFilter;
 
@@ -68,6 +69,59 @@ namespace Dump {
 		{
 			g_pathFilter.clear();
 		}
+	}
+
+	void addProgress(float progress) {
+		*g_progress_percent = g_progress_percent_last_function + progress;
+		g_progress_percent_last_function = *g_progress_percent;
+	}
+
+	void setProgress(float progress) {
+		*g_progress_percent = progress;
+		g_progress_percent_last_function = *g_progress_percent;
+	}
+
+	void enableButton() {
+		*g_enable_buttons = true;
+		setProgress(1.0f);
+		*g_dumping_state = dbk::DumpingMenu::DumpState::End;
+	}
+
+	void checkPlayers() {
+		for (u8 i = 0; i < 8; i++) {
+			u64 offset = i * GSavePlayerVillagerAccountSize;
+			u128 AccountUID = 0;
+			util::PrintToNXLink("%lX\n", g_mainAddr + GSavePlayerVillagerAccountOffset + offset);
+			dmntchtReadCheatProcessMemory(g_mainAddr + GSavePlayerVillagerAccountOffset + offset, &AccountUID, 0x10);
+			if (AccountUID != 0) g_players[i] = true;
+			u64 part1 = (u64)(AccountUID >> 64), part2 = (u64)(AccountUID & 0xFFFFFFFFFFFFFFFF);
+			util::PrintToNXLink("%lX%lX\n", part1, part2);
+		}
+	}
+
+	void setPathFilter() {
+		for (u8 i = 0; i < 8; i++) {
+			if (!g_players[i]) addPathFilter(g_TemplateIn + "Villager" + std::to_string(i));
+		}
+	}
+
+	u8 getPlayerNumber() {
+		u8 playernum = 0;
+		for (u8 i = 0; i < 8; i++) {
+			if (g_players[i]) playernum++;
+		}
+		return playernum;
+	}
+
+	void getAccountTable() {
+		FsFile md;
+		u64 bytesread;
+		static char path[FS_MAX_PATH] = { 0 };
+		std::snprintf(path, FS_MAX_PATH, (g_pathOut + "main.dat").c_str());
+		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Read, &md);
+		g_AccountTableBuffer = new u8[g_AccountTableSize];
+		fsFileRead(&md, SaveHeaderSize + GSavePlayerVillagerAccountOffset - GAccountTableOffset, g_AccountTableBuffer, g_AccountTableSize, FsReadOption_None, &bytesread);
+		fsFileClose(&md);
 	}
 
 	void DecryptPair(const std::string &dataPathIn, const std::string &dataPathOut) {
@@ -204,7 +258,7 @@ namespace Dump {
 		fsFileClose(&md);
 	}
 
-	void handleDecryption(const std::string &in, const std::string &out) {
+	void handleDecryption(const std::string &in, const std::string &out, int datcount) {
 		fs::dirList list(in);
 		unsigned int listcount = list.getCount();
 		for (unsigned int i = 0; i < listcount; i++)
@@ -219,6 +273,7 @@ namespace Dump {
 				std::string newOut = out + list.getItem(i) + "/";
 				mkdir(newOut.substr(0, newOut.length() - 1).c_str(), 0777);
 				handleDecryption(newIn, newOut);
+				handleDecryption(newIn, newOut, datcount);
 			}
 			//skip over landname.dat
 			else if (list.getItem(i) == "landname.dat") {
@@ -231,14 +286,15 @@ namespace Dump {
 			else if (list.getItemExt(i) == "dat") {
 				std::string dataPathIn = in + list.getItem(i);
 				std::string dataPathOut = out + list.getItem(i);
-				if (!(getFilename(dataPathIn).find("Header") != std::string::npos)) {
+				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
 					DecryptPair(dataPathIn, dataPathOut);
+					addProgress(0.30f / datcount);
 				}
 			}
 		}
 	}
 
-	void handleEncryption( const std::string &in, const std::string &out, u32 tick) {
+	void handleEncryption( const std::string &in, const std::string &out, u32 tick, int datcount) {
 		fs::dirList list(in);
 		unsigned int listcount = list.getCount();
 		for (unsigned int i = 0; i < listcount; i++)
@@ -251,8 +307,8 @@ namespace Dump {
 				printf("isDir : %d\n", list.isDir(i));
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
-				mkdir(newOut.substr(0, newOut.length() - 1).c_str(), 0777);
-				handleEncryption(newIn, newOut, tick);
+				fsFsCreateDirectory(&g_fsSdmc, newOut.c_str());
+				handleEncryption(newIn, newOut, tick, datcount);
 			}
 			//skip over landname.dat
 			else if (list.getItem(i) == "landname.dat") {
@@ -265,67 +321,41 @@ namespace Dump {
 			else if (list.getItemExt(i) == "dat") {
 				std::string dataPathIn = in + list.getItem(i);
 				std::string dataPathOut = out + list.getItem(i);
-				if (!(getFilename(dataPathIn).find("Header") != std::string::npos)) {
+				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
 					Hash(dataPathIn);
 					EncryptPair(dataPathIn, dataPathOut, tick);
+					addProgress(0.30f / datcount);
 				}
 			}
 		}
 	}
 
+	int countDATFilesRecursively(const std::string& in) {
+		int filecount = 0;
+		fs::dirList list(in);
+		unsigned int listcount = list.getCount();
+		for (unsigned int i = 0; i < listcount; i++)
+		{
+			if (list.isDir(i))
+			{
+				if (pathIsFiltered(in + list.getItem(i)))
+					continue;
 
-	void addProgress(float progress) {
-		*g_progress_percent = g_progress_percent_last_function + progress;
-		g_progress_percent_last_function = *g_progress_percent;
-	}
-
-	void setProgress(float progress) {
-		*g_progress_percent = progress;
-		g_progress_percent_last_function = *g_progress_percent;
-	}
-
-
-	void enableButton() {
-		*g_enable_buttons = true;
-		setProgress(1.0f);
-		*g_dumping_state = dbk::DumpingMenu::DumpState::End;
-	}
-
-	void checkPlayers() {
-		for (u8 i = 0; i < 8; i++) {
-			u64 offset = i * GSavePlayerVillagerAccountSize;
-			u128 AccountUID = 0;
-			printf("%lX\n", g_mainAddr + GSavePlayerVillagerAccountOffset + offset);
-			dmntchtReadCheatProcessMemory(g_mainAddr + GSavePlayerVillagerAccountOffset + offset, &AccountUID, 0x10);
-			if (AccountUID != 0) g_players[i] = true;
-			u64 part1 = (u64)(AccountUID>>64), part2 = (u64)(AccountUID & 0xFFFFFFFFFFFFFFFF);
-			printf("%lX%lX\n", part1, part2);
+				std::string newIn = in + list.getItem(i) + "/";
+				filecount += countDATFilesRecursively(newIn);
+			}
+			//skip over landname.dat
+			else if (list.getItem(i) == "landname.dat") {
+				continue;
+			}
+			else if (list.getItemExt(i) == "dat") {
+				std::string dataPathIn = in + list.getItem(i);
+				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
+					filecount++;
+				}
+			}
 		}
-	}
-
-	void setPathFilter() {
-		for (u8 i = 0; i < 8; i++) {
-			if(!g_players[i]) addPathFilter(g_TemplateIn + "Villager" + std::to_string(i));
-		}
-	}
-
-	u8 getPlayerNumber() {
-		u8 playernum = 0;
-		for (u8 i = 0; i < 8; i++) {
-			if (g_players[i]) playernum++;
-		}
-		return playernum;
-	}
-
-	void getAccountTable() {
-		FsFile md;
-		u64 bytesread;
-		static char path[FS_MAX_PATH] = { 0 };
-		std::snprintf(path, FS_MAX_PATH, (g_pathOut + "main.dat").c_str());
-		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Read, &md);
-		g_AccountTableBuffer = new u8[g_AccountTableSize];
-		fsFileRead(&md, SaveHeaderSize + GSavePlayerVillagerAccountOffset - GAccountTableOffset, g_AccountTableBuffer, g_AccountTableSize, FsReadOption_None, &bytesread);
-		fsFileClose(&md);
+		return filecount;
 	}
 
 	/* Setting up all kinds of variables for dumping */
@@ -356,6 +386,9 @@ namespace Dump {
 	
 #if !DEBUG_UI
 		checkPlayers();
+		freePathFilters();
+		setPathFilter();
+		g_datcount = countDATFilesRecursively(g_TemplateIn);
 
 		TimeCalendarTime dumpdreamtime = util::getDreamTime(g_mainAddr);
 		char dreamtime[128];
@@ -365,32 +398,30 @@ namespace Dump {
 		std::string strislandname = util::getIslandNameASCII(g_playerAddr);
 
 		g_pathOut += strislandname.empty() ? "[DA-" + util::getDreamAddrString(g_mainAddr) + "]" : ("[DA-" + util::getDreamAddrString(g_mainAddr) + "] " + strislandname);
-		mkdir(g_pathOut.c_str(), 0777);
+		//g_pathOut += "/";
+		fsFsCreateDirectory(&g_fsSdmc, g_pathOut.c_str());
 		if (!strislandname.empty()) g_dumping_menu->LogAddLine("DA-" + util::getDreamAddrString(g_mainAddr) + " " + strislandname);
 		else g_dumping_menu->LogAddLine("DA-" + util::getDreamAddrString(g_mainAddr));
 		g_pathOut += "/" + std::string(dreamtime);
-		mkdir(g_pathOut.c_str(), 0777);
+		fsFsCreateDirectory(&g_fsSdmc, g_pathOut.c_str());
 		g_dumping_menu->LogAddLine(std::string(dreamtime));
 		u32 randweather = util::GetWeatherRandomSeed(g_mainAddr);
-		printf("randweatherseed: %d", randweather);
+		util::PrintToNXLink("randweatherseed: %d", randweather);
 		g_dumping_menu->LogAddLine("Weather Seed: " + std::to_string(util::GetWeatherRandomSeed(g_mainAddr)));
 		g_pathOut += "/";
-
+		addProgress(0.10f);
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsDecrypt;
-
-		addProgress(0.08f);
 #else
 		enableButton();
 #endif
 	}
 
 	void Decrypt() {
-		freePathFilters();
-		setPathFilter();
 		g_dumping_menu->LogAddLine("Decrypting save files...");
-		handleDecryption(g_TemplateIn, g_pathOut);
+		float progress = g_progress_percent_last_function;
+		handleDecryption(g_TemplateIn, g_pathOut, g_datcount);
+		setProgress(progress + 0.30f);
 		g_dumping_menu->LogEditLastElement("Decrypting save files: successful");
-		addProgress(0.2f);
 #if !DEBUG_UI
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsRW;
 #else
@@ -414,15 +445,17 @@ namespace Dump {
 		g_bufferSize = BUFF_SIZE;
 		float progress = g_progress_percent_last_function;
 		g_dumping_menu->LogAddLine("Copying island...");
-		for (u64 offset = 0; offset < mainSize; offset += g_bufferSize) {
+		u64 offset;
+		for (offset = 0; offset < mainSize; offset += g_bufferSize) {
 			if (g_bufferSize > mainSize - offset)
 				g_bufferSize = mainSize - offset;
 
-			setProgress(progress + (0.2f * (float)offset / mainSize));
+			setProgress(progress + (0.10f * (float)offset / mainSize));
 
 			dmntchtReadCheatProcessMemory(g_mainAddr + offset, g_buffer, g_bufferSize);
 			fsFileWrite(&md, SaveHeaderSize + offset, g_buffer, g_bufferSize, FsWriteOption_Flush);
 		}
+		setProgress(progress + 0.10f);
 		g_dumping_menu->LogEditLastElement("Copying island: successful");
 		printf("wrote main.dat\n");
 		fsFileClose(&md);
@@ -444,8 +477,8 @@ namespace Dump {
 		/* PLAYERS */
 		FsFile pd;
 
-		g_dumping_menu->LogAddLine("Players to be copied: " + std::to_string(getPlayerNumber()));
 		progress = g_progress_percent_last_function;
+		g_dumping_menu->LogAddLine("Players to be copied: " + std::to_string(getPlayerNumber()));
 		for (u8 i = 0; i < 8; i++) {
 			/* If there is no player, dont even bother */
 			if (!g_players[i]) continue;
@@ -460,22 +493,19 @@ namespace Dump {
 			//reset size in-case it got changed in the latter for loop
 			g_bufferSize = BUFF_SIZE;
 			g_dumping_menu->LogAddLine("Copying player " + std::to_string(i + 1) + "...");
-			for (u64 offset = 0; offset < playerSize; offset += g_bufferSize) {
+			for (offset = 0; offset < playerSize; offset += g_bufferSize) {
 				if (g_bufferSize > playerSize - offset)
 					g_bufferSize = playerSize - offset;
 
-				//printf("2progress: %.2F\n", *g_progress_percent);
-				//if(getPlayerNumber() != 0) setProgress(progress + (0.2f * (float)offset + g_bufferSize / playerSize) / getPlayerNumber());
-				//printf("1progress: %.2F\n", *g_progress_percent);
-
 				dmntchtReadCheatProcessMemory(g_playerAddr + offset + (i * playersOffset), g_buffer, g_bufferSize);
 				fsFileWrite(&pd, SaveHeaderSize + offset, g_buffer, g_bufferSize, FsWriteOption_Flush);
-			}
+			}	
 			g_dumping_menu->LogEditLastElement("Copying player " + std::to_string(i + 1) + ": successful");
 			printf("wrote personal.dat\n");
 			fsFileClose(&pd);
+			addProgress(0.10f / getPlayerNumber());
 		}
-		setProgress(progress + 0.2f);
+		setProgress(progress + 0.10f);
 
 #if !DEBUG_UI
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsFix;
@@ -800,7 +830,6 @@ namespace Dump {
 			g_dumping_menu->LogAddLine("GetLicenseGrdWood: " + std::to_string(GetLicenses[6]));
 			g_dumping_menu->LogAddLine("GetLicenseRiver: " + std::to_string(GetLicenses[7]));
 			g_dumping_menu->LogAddLine("GetLicenseCliff: " + std::to_string(GetLicenses[8]));
-			u16 perms;
 			memcpy(&perms, PermitsandLicenses, sizeof(perms));
 			g_dumping_menu->LogAddLine("PermitsandLicenses: " + std::to_string(((perms >> (0x2245 % 8)) & 0x1FF)));
 
@@ -860,7 +889,9 @@ namespace Dump {
 
 	void Fixes() {
 		FixMain();
+		addProgress(0.05f);
 		FixPlayers();
+		addProgress(0.05f);
 
 #if !DEBUG_UI
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsSave;
@@ -873,13 +904,16 @@ namespace Dump {
 		g_dumping_menu->LogAddLine("Hashing and encrypting save files...");
 		//grabbing tick once, because else the Random::init() function would run for each file and i tink they all need to have the same tick?
 		u32 currenttick = static_cast<u32>(svcGetSystemTick());
+		float progress = g_progress_percent_last_function;
 		//this shouldnt be an issue, since the directory lists only get fetched once at the start
-		handleEncryption(g_pathOut, g_pathOut, currenttick);
+		handleEncryption(g_pathOut, g_pathOut, currenttick, g_datcount);
+		setProgress(progress + 0.30f);
 		g_dumping_menu->LogEditLastElement("Hashing and encrypting save files: successful");
 		fsFsClose(&g_fsSdmc);
 		delete g_AccountTableBuffer;
 		delete g_buffer;
 		enableButton();
+		*g_dumping_state = dbk::DumpingMenu::DumpState::End;
 	}
 
 }
