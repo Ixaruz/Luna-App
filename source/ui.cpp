@@ -55,6 +55,8 @@ namespace dbk {
 
         static u64 g_last_ns = 0;
         static u64 g_frame_counter = 0;
+        static u64 g_dumpstart_ft = 0;
+        static u64 g_dumpend_ft = 0;
         static u64 g_last_ft = 0;
         static u64 g_last_ft2 = 0;
         static u64 g_last_ft3 = 0;
@@ -62,7 +64,7 @@ namespace dbk {
 
         const int g_starwidthmax = 7.0f;
         const int g_starwidthmin = 2.0f;
-        const int g_starcount = 30;
+        const int g_starcount = 35;
         float   g_starsx[g_starcount];
         float   g_starsy[g_starcount];
         float   g_starsw[g_starcount];
@@ -486,7 +488,7 @@ namespace dbk {
         ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Template is lacking:", std::string("Villager" + info).c_str(), 1));
     }
 
-    void MainMenu::gotoNextMenu() {
+    void MainMenu::gotoNextMenu(u64 ns) {
 #if !DEBUG_UI
 
         u32 dreamstrval;
@@ -568,7 +570,7 @@ namespace dbk {
             switch (activated_button->id) {
                 case DumpButtonId:
                 {
-                    gotoNextMenu();
+                    gotoNextMenu(ns);
                     return;
                 }
                 case ExitButtonId:
@@ -762,7 +764,13 @@ namespace dbk {
 
         /* Transition to the next update state. */
         if (m_dumping_state != DumpState::NeedsDraw && m_dumping_state != DumpState::End && m_dumping_state != DumpState::NeedsWait) {
-            this->TransitionDumpState();
+            this->TransitionDumpState(ns);
+        }
+
+        if (m_dumping_state == DumpState::End && g_dumpend_ft == 0) {
+            g_dumpend_ft = ns;
+            std::string time = std::to_string(ceil(((float)g_dumpend_ft - g_dumpstart_ft) * 100 / 1'000'000'000) / 100);
+            this->LogAddLine("Passed time: " + time.substr(0, time.length() - 4) +" seconds");
         }
 
         //fontsize + line space

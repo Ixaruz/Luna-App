@@ -165,7 +165,7 @@ namespace dbk {
             static constexpr float WindowHeight            = 240.0f;
             static constexpr float TitleGap                = 90.0f;
         protected:
-            void gotoNextMenu();
+            void gotoNextMenu(u64 ns);
         public:
             MainMenu(const char* islandname = "");
 
@@ -194,7 +194,7 @@ namespace dbk {
         static constexpr size_t UpdateTaskBufferSize = 0x100000;
     private:
         void InterpretInput();
-        Result TransitionDumpState();
+        Result TransitionDumpState(u64 ns);
         float getTopBound();
         float getBottomBound();
         float getLeftBound();
