@@ -165,7 +165,9 @@ namespace Dump {
 		//clear our path buffer or bad things will happen
 		memset(path, 0, FS_MAX_PATH);
 		std::snprintf(path, FS_MAX_PATH, dataPathOut.c_str());
-		fsFsDeleteFile(&g_fsSdmc, path);
+		if (access(path, F_OK) != -1) {
+			fsFsDeleteFile(&g_fsSdmc, path);	
+		}
 		fsFsCreateFile(&g_fsSdmc, path, datasize, 0);
 		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Write, &newmd);
 		fsFileWrite(&newmd, 0, encData, datasize, FsWriteOption_Flush);
@@ -204,7 +206,9 @@ namespace Dump {
 		//clear our path buffer or bad things will happen
 		memset(path, 0, FS_MAX_PATH);
 		std::snprintf(path, FS_MAX_PATH, dataPathOut.c_str());
-		fsFsDeleteFile(&g_fsSdmc, path);
+		if (access(path, F_OK) != -1) {
+			fsFsDeleteFile(&g_fsSdmc, path);	
+		}
 		fsFsCreateFile(&g_fsSdmc, path, datasize, 0);
 		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Write, &newmd);
 		fsFileWrite(&newmd, 0, encData, datasize, FsWriteOption_Flush);
@@ -213,7 +217,9 @@ namespace Dump {
 		//clear our path buffer or bad things will happen
 		memset(path, 0, FS_MAX_PATH);
 		std::snprintf(path, FS_MAX_PATH, headerPathOut.c_str());
-		fsFsDeleteFile(&g_fsSdmc, path);
+		if (access(path, F_OK) != -1) {
+			fsFsDeleteFile(&g_fsSdmc, path);
+		}
 		fsFsCreateFile(&g_fsSdmc, path, sizeof(decltype(headerData)), 0);
 		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Write, &newhd);
 		fsFileWrite(&newhd, 0, &headerData, sizeof(decltype(headerData)), FsWriteOption_Flush);
