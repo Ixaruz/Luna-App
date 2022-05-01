@@ -221,8 +221,7 @@ namespace dbk {
         bool m_scrolling = false;
 
         void EnableButtons();
-        void LogAddLine(std::string text, bool scroll = true, TextStyle style = TextStyle::LeftAlign);
-        void LogEditElement(std::string oldtext, std::string newtext);
+        int LogAddLine(std::string text, int index = -1, bool scroll = true, TextStyle style = TextStyle::LeftAlign);
         void LogEditLastElement(std::string text);
         
         void ScrollTo(float offset) {

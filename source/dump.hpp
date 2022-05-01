@@ -575,7 +575,7 @@ namespace Dump {
 			std::snprintf(pathbuffer, FS_MAX_PATH, std::string(currentplayer + "personal.dat").c_str());
 			fsFsOpenFile(&g_fsSdmc, pathbuffer, FsOpenMode_Read | FsOpenMode_Write, &pd);
 
-			g_dumping_menu->LogAddLine("Applying fixes to player " + std::to_string(i + 1) + "...");
+			int applyingFixesLogEntryIndex = g_dumping_menu->LogAddLine("Applying fixes to player " + std::to_string(i + 1) + "...");
 			u8 houselvl = 0;
 			u16 BuiltTownOffice = 0; //59
 
@@ -882,7 +882,7 @@ namespace Dump {
 			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x2B84 / 8), &ReceivedItemPocket40, sizeof(u8), FsWriteOption_Flush);
 
 			delete g_RecipeBook;
-			g_dumping_menu->LogEditElement("Applying fixes to player " + std::to_string(i + 1) + "...", "Applying fixes to player " + std::to_string(i + 1) + ": successful");
+			g_dumping_menu->LogAddLine("Applying fixes to player " + std::to_string(i + 1) + ": successful", applyingFixesLogEntryIndex);
 			fsFileClose(&pd);
 		}
 	}

@@ -673,18 +673,36 @@ namespace dbk {
         this->SetButtonSelected(ExitButtonId, true);
     }
 
-    void DumpingMenu::LogAddLine(std::string text, bool scroll, TextStyle style) {
+    //return index of inserted object
+    //log will crash, if we reach 2147483647 (max int size) log elements or something, but should be fine for now
+    //scroll: should we scroll to the latest entry?
+    //TextStyle: how do you want to align the text?
+    int DumpingMenu::LogAddLine(std::string text, int index, bool scroll, TextStyle style) {
+        int retindex = -1;
         g_editinglog = true;
+        int log_entries_ctr = 0;
         for (size_t i = 0; i <= text.size(); i += g_maxloglength) {
             std::string substringtext = text.substr(i, g_maxloglength);
-            LogEntry* newLogEntry = new LogEntry(substringtext, style);
-            this->m_log_entries.push_back(newLogEntry);
+            //no index given
+            if (index < 0) {
+                LogEntry* newLogEntry = new LogEntry(substringtext, style);
+                this->m_log_entries.push_back(newLogEntry);
+                retindex = (int)this->m_log_entries.size() - 1;
+            }
+            //we assume when editing a log entry, that is multiple lines long, that we have to edit the next one as well
+            else {
+                this->m_log_entries[index + log_entries_ctr]->setText(substringtext);
+                retindex = index;
+            }
+            log_entries_ctr++;
         }
         this->m_scrolling = scroll;
         g_editinglog = false;
+        return retindex;
     }
 
-    /* horrible memory usage, try to use this as little as possible */
+    //horrible memory usage, try to use this as little as possible
+    /*
     void DumpingMenu::LogEditElement(std::string oldtext, std::string newtext) {
         g_editinglog = true;
         for (auto elm : this->m_log_entries) {
@@ -694,6 +712,7 @@ namespace dbk {
         }
         g_editinglog = false;
     }
+    */
 
     void DumpingMenu::LogEditLastElement(std::string text) {
         g_editinglog = true;
