@@ -137,8 +137,8 @@ namespace Dump {
 
 		std::string headerPathIn = dataPathIn.substr(0, dataPathIn.find_last_of('.')) + "Header.dat";
 
-		printf(std::string("Data : \t\t" + dataPathIn + "\n").c_str());
-		printf(std::string("Headers : \t" + headerPathIn + "\n").c_str());
+		util::PrintToNXLink(std::string("Data : \t\t" + dataPathIn + "\n").c_str());
+		util::PrintToNXLink(std::string("Headers : \t" + headerPathIn + "\n").c_str());
 
 		//clear our path buffer or bad things will happen
 		memset(path, 0, FS_MAX_PATH);
@@ -157,7 +157,7 @@ namespace Dump {
 		fsFileRead(&md, 0, encData, datasize, FsReadOption_None, &bytesread);
 		fsFileClose(&md);
 
-		//printf("dataSize for Sluttz Cocktober: %ld\n", datasize);
+		//util::PrintToNXLink("dataSize for Sluttz Cocktober: %ld\n", datasize);
 
 		SaveCrypto::Crypt(headerData, encData, datasize);
 
@@ -183,7 +183,7 @@ namespace Dump {
 		s64 datasize = 0;
 		fsFileGetSize(&md, &datasize);
 
-		printf(std::string("Data : \t\t" + dataPathIn + "\n").c_str());
+		util::PrintToNXLink(std::string("Data : \t\t" + dataPathIn + "\n").c_str());
 
 		u8 *encData = new u8[datasize];
 		u64 bytesread = 0;
@@ -268,16 +268,15 @@ namespace Dump {
 
 			if (list.isDir(i))
 			{
-				printf("isDir : %d\n", list.isDir(i));
+				util::PrintToNXLink("isDir : %d\n", list.isDir(i));
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
-				mkdir(newOut.substr(0, newOut.length() - 1).c_str(), 0777);
-				handleDecryption(newIn, newOut);
+				fsFsCreateDirectory(&g_fsSdmc, newOut.c_str());
 				handleDecryption(newIn, newOut, datcount);
 			}
 			//skip over landname.dat
 			else if (list.getItem(i) == "landname.dat") {
-				printf("found landname.dat\n");
+				util::PrintToNXLink("found landname.dat\n");
 				std::string fullIn = in + list.getItem(i);
 				std::string fullOut = out + list.getItem(i);
 				fs::copyFile(&g_fsSdmc, fullIn, fullOut);
@@ -304,7 +303,7 @@ namespace Dump {
 				if (pathIsFiltered(in + list.getItem(i)))
 					continue;
 
-				printf("isDir : %d\n", list.isDir(i));
+				util::PrintToNXLink("isDir : %d\n", list.isDir(i));
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
 				fsFsCreateDirectory(&g_fsSdmc, newOut.c_str());
@@ -312,7 +311,7 @@ namespace Dump {
 			}
 			//skip over landname.dat
 			else if (list.getItem(i) == "landname.dat") {
-				printf("found landname.dat\n");
+				util::PrintToNXLink("found landname.dat\n");
 				std::string fullIn = in + list.getItem(i);
 				std::string fullOut = out + list.getItem(i);
 				fs::copyFile(&g_fsSdmc, fullIn, fullOut);
@@ -368,7 +367,7 @@ namespace Dump {
 		g_mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
 		if (g_mainAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: mainAddr");
-			printf("Error: mainAddr\n");
+			util::PrintToNXLink("Error: mainAddr\n");
 #if !DEBUG_UI
 			enableButton();
 			return;
@@ -377,7 +376,7 @@ namespace Dump {
 		g_playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 		if (g_playerAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: playerAddr");
-			printf("Error: playerAddr\n");
+			util::PrintToNXLink("Error: playerAddr\n");
 #if !DEBUG_UI
 			enableButton();
 			return;
@@ -457,7 +456,7 @@ namespace Dump {
 		}
 		setProgress(progress + 0.10f);
 		g_dumping_menu->LogEditLastElement("Copying island: successful");
-		printf("wrote main.dat\n");
+		util::PrintToNXLink("wrote main.dat\n");
 		fsFileClose(&md);
 
 		/* LANDNAME */
@@ -501,8 +500,8 @@ namespace Dump {
 				fsFileWrite(&pd, SaveHeaderSize + offset, g_buffer, g_bufferSize, FsWriteOption_Flush);
 			}	
 			g_dumping_menu->LogEditLastElement("Copying player " + std::to_string(i + 1) + ": successful");
-			printf("wrote personal.dat\n");
 			fsFileClose(&pd);
+			util::PrintToNXLink("wrote personal.dat\n");	
 			addProgress(0.10f / getPlayerNumber());
 		}
 		setProgress(progress + 0.10f);
@@ -531,23 +530,23 @@ namespace Dump {
 		fsFileWrite(&md, SaveHeaderSize + EventFlagOffset + (362 * 2), &EnableMyDream, sizeof(u16), FsWriteOption_Flush);
 		fsFileWrite(&md, SaveHeaderSize + EventFlagOffset + (364 * 2), &DreamUploadPlayerHaveCreatorID, sizeof(u16), FsWriteOption_Flush);
 
-		printf("Account Table Buffer:\n");
+		util::PrintToNXLink("Account Table Buffer:\n");
 		for (int i = 0; i < g_AccountTableSize; i++) {
 			if (((i+1) % 16) == 0) {
-				printf("%02X\n", g_AccountTableBuffer[i]);
+				util::PrintToNXLink("%02X\n", g_AccountTableBuffer[i]);
 			}
 			else {
-				printf("%02X ", g_AccountTableBuffer[i]);
+				util::PrintToNXLink("%02X ", g_AccountTableBuffer[i]);
 			}
 		}
-		printf("\n");
+		util::PrintToNXLink("\n");
 		//write AccountUID linkage (for Nintendo Switch Online)
 		for (u8 i = 0; i < 8; i++) {
 			if (g_players[i]) {
 				u128 AccountUID;
 				memcpy(&AccountUID, g_AccountTableBuffer + 0x10 + (i * 0x48), 0x10);
 				u64 part1 = (u64)(AccountUID >> 64), part2 = (u64)(AccountUID & 0xFFFFFFFFFFFFFFFF);
-				printf("wrote UID: %lX%lX\n", part1, part2);
+				util::PrintToNXLink("wrote UID: %lX%lX\n", part1, part2);
 				fsFileWrite(&md, SaveHeaderSize + GSavePlayerVillagerAccountOffset + (i * 0x48), g_AccountTableBuffer + 0x10 + (i * 0x48), 0x10, FsWriteOption_Flush);
 			}
 		}
@@ -696,9 +695,9 @@ namespace Dump {
 
 			storageSize = storageSizes[houselvl + RcoStorageExpansion_v200_AddLevel];
 
-			printf("Houselevel player %d: %d\n", i, houselvl);
-			printf("Storage expansion 2.0.0: %d\n", RcoStorageExpansion_v200_AddLevel);
-			printf("resulting storage size: %d\n", storageSize);
+			util::PrintToNXLink("Houselevel player %d: %d\n", i, houselvl);
+			util::PrintToNXLink("Storage expansion 2.0.0: %d\n", RcoStorageExpansion_v200_AddLevel);
+			util::PrintToNXLink("resulting storage size: %d\n", storageSize);
 
 			u16 Update200Flags[] = {
 				MainmenuRecipe_v2,						//Be a Chef! DIY Recipes+
@@ -755,8 +754,8 @@ namespace Dump {
 
 			u16 g_SpecialityFruit = 0;
 			dmntchtReadCheatProcessMemory(g_mainAddr + SaveFgOffset + SpecialityFruitOffset, &g_SpecialityFruit, sizeof(u16));
-			printf("SpecialityFruit: %04d\n", g_SpecialityFruit);
-			//printf("Smoothie: 0x%04X\n", TownfruitSmoothiesMap.find(g_SpecialityFruit)->second);
+			util::PrintToNXLink("SpecialityFruit: %04d\n", g_SpecialityFruit);
+			//util::PrintToNXLink("Smoothie: 0x%04X\n", TownfruitSmoothiesMap.find(g_SpecialityFruit)->second);
 			util::SetFlag(g_RecipeBook, TownfruitSmoothiesMap.find(g_SpecialityFruit)->second, MainmenuRecipe_v2);
 
 			if (OwlGotDiyRecipe == 1 || P2_CreatedAfterOwlMoving == 1) {
@@ -765,49 +764,49 @@ namespace Dump {
 				util::SetFlag(g_RecipeBook, 0x0B7, MainmenuRecipe);
 			}
 
-			printf("Recipe Book:\n");
+			util::PrintToNXLink("Recipe Book:\n");
 			for (int i = 0; i < 0x100; i++) {
 				if (((i + 1) % 16) == 0) {
-					printf("%02X\n", g_RecipeBook[i]);
+					util::PrintToNXLink("%02X\n", g_RecipeBook[i]);
 				}
 				else {
-					printf("%02X ", g_RecipeBook[i]);
+					util::PrintToNXLink("%02X ", g_RecipeBook[i]);
 				}
 			}
 
-			printf("AddHairStyle1: %d\n",HairStyleColor[0]);
-			printf("AddHairStyle2: %d\n", HairStyleColor[1]);
-			printf("AddHairStyle3: %d\n", HairStyleColor[2]);
-			printf("HairStyles: 0x%X\n", (HairStyles[0] >> 1) & 7);
-			printf("AddHairStyle4: %d\n", AddHairStyle4);
-			printf("StylishHairStyles: 0x%X\n", (StylishHairStyles[0] >> 6) & 1);
+			util::PrintToNXLink("AddHairStyle1: %d\n",HairStyleColor[0]);
+			util::PrintToNXLink("AddHairStyle2: %d\n", HairStyleColor[1]);
+			util::PrintToNXLink("AddHairStyle3: %d\n", HairStyleColor[2]);
+			util::PrintToNXLink("HairStyles: 0x%X\n", (HairStyles[0] >> 1) & 7);
+			util::PrintToNXLink("AddHairStyle4: %d\n", AddHairStyle4);
+			util::PrintToNXLink("StylishHairStyles: 0x%X\n", (StylishHairStyles[0] >> 6) & 1);
 
-			printf("ItemRingEnable: %d\n", ItemRingEnable);
-			printf("Tool Ring: It's Essential!: 0x%X\n", ToolRingItsEssential[0] & 1);
+			util::PrintToNXLink("ItemRingEnable: %d\n", ItemRingEnable);
+			util::PrintToNXLink("Tool Ring: It's Essential!: 0x%X\n", ToolRingItsEssential[0] & 1);
 
-			printf("GetLicenseGrdStone: %d\n", GetLicenses[0]);
-			printf("GetLicenseGrdBrick: %d\n", GetLicenses[1]);
-			printf("GetLicenseGrdDarkSoil: %d\n", GetLicenses[2]);
-			printf("GetLicenseGrdStonePattern: %d\n", GetLicenses[3]);
-			printf("GetLicenseGrdSand: %d\n", GetLicenses[4]);
-			printf("GetLicenseGrdTile: %d\n", GetLicenses[5]);
-			printf("GetLicenseGrdWood: %d\n", GetLicenses[6]);
-			printf("GetLicenseRiver: %d\n", GetLicenses[7]);
-			printf("GetLicenseCliff: %d\n", GetLicenses[8]);
+			util::PrintToNXLink("GetLicenseGrdStone: %d\n", GetLicenses[0]);
+			util::PrintToNXLink("GetLicenseGrdBrick: %d\n", GetLicenses[1]);
+			util::PrintToNXLink("GetLicenseGrdDarkSoil: %d\n", GetLicenses[2]);
+			util::PrintToNXLink("GetLicenseGrdStonePattern: %d\n", GetLicenses[3]);
+			util::PrintToNXLink("GetLicenseGrdSand: %d\n", GetLicenses[4]);
+			util::PrintToNXLink("GetLicenseGrdTile: %d\n", GetLicenses[5]);
+			util::PrintToNXLink("GetLicenseGrdWood: %d\n", GetLicenses[6]);
+			util::PrintToNXLink("GetLicenseRiver: %d\n", GetLicenses[7]);
+			util::PrintToNXLink("GetLicenseCliff: %d\n", GetLicenses[8]);
 
 			u16 perms;
 			memcpy(&perms, PermitsandLicenses, sizeof(perms));
-			printf("PermitsandLicenses: 0x%X\n", (perms >> (0x2245 % 8)) & 0x1FF);
+			util::PrintToNXLink("PermitsandLicenses: 0x%X\n", (perms >> (0x2245 % 8)) & 0x1FF);
 
-			printf("UnlockMyDesignProCategory: %d\n", UnlockMyDesignProCategory);
-			printf("Custom Design Pro Editor: 0x%X\n", (CustomDesignProEditor[0] >> (0x2F99 % 8)) & 1);
-			printf("UnlockMydesignPro2: %d\n", UnlockMydesignPro2);
-			printf("Custom Design Pro Editor Plus: 0x%X\n", (CustomDesignProEditorPlus[0] >> (0x338B % 8)) & 1);
+			util::PrintToNXLink("UnlockMyDesignProCategory: %d\n", UnlockMyDesignProCategory);
+			util::PrintToNXLink("Custom Design Pro Editor: 0x%X\n", (CustomDesignProEditor[0] >> (0x2F99 % 8)) & 1);
+			util::PrintToNXLink("UnlockMydesignPro2: %d\n", UnlockMydesignPro2);
+			util::PrintToNXLink("Custom Design Pro Editor Plus: 0x%X\n", (CustomDesignProEditorPlus[0] >> (0x338B % 8)) & 1);
 
-			printf("AddBodyColor: %d\n", AddHalloweenColor[0]);
-			printf("AddEyeColor: %d\n", AddHalloweenColor[1]);
-			printf("AddCheekColor: %d\n", AddHalloweenColor[2]);
-			printf("Halloween Character Colors: 0x%X\n", (HalloweenCharacterColors[0] >> (0x33C8 % 8)) & 0x7);
+			util::PrintToNXLink("AddBodyColor: %d\n", AddHalloweenColor[0]);
+			util::PrintToNXLink("AddEyeColor: %d\n", AddHalloweenColor[1]);
+			util::PrintToNXLink("AddCheekColor: %d\n", AddHalloweenColor[2]);
+			util::PrintToNXLink("Halloween Character Colors: 0x%X\n", (HalloweenCharacterColors[0] >> (0x33C8 % 8)) & 0x7);
 #if DEBUG
 			/*
 			g_dumping_menu->LogAddLine("AddHairStyle1: " + std::to_string(HairStyleColor[0]));

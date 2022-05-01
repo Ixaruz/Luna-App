@@ -126,7 +126,7 @@ bool util::findVersionIndex(u64 versionBID) {
 	if (p == BID.end()) return false;
 	else {
 		versionindex = std::distance(BID.begin(), p);
-		printf("current version: 2.0.%d\n", versionindex);
+		util::PrintToNXLink("current version: 2.0.%d\n", versionindex);
 		return true;
 	}
 }
@@ -423,7 +423,7 @@ std::string util::getIslandNameASCII(u64 playerAddr)
 				
 			}
 			else {
-				printf("invalid letter: 0x%04X\n", namechar);
+				util::PrintToNXLink("invalid letter: 0x%04X\n", namechar);
 				name[i + currentoffset] = 0x005F;
 			}
 		}
@@ -442,9 +442,9 @@ std::string util::getIslandNameASCII(u64 playerAddr)
 	utf16_to_utf8(name_string, name, sizeof(name_string) / sizeof(u8));
 
 	for (int i = 0; i < sizeof(name_string); i++) {
-		printf("%c", name_string[i]);
+		util::PrintToNXLink("%c", name_string[i]);
 	}
-	printf("\n");
+	util::PrintToNXLink("\n");
 
 	return std::string((char*)name_string);
 }
@@ -494,7 +494,6 @@ void util::stripChar(char _c, std::string& _s)
 		_s.erase(pos, 1);
 }
 
-
 /**
  * @brief Follow a variable pointer path from main (last arg has to be 0xFFFFFFFFFFFFFFFF)
  */
@@ -511,7 +510,7 @@ u64 util::FollowPointerMain(u64 pointer, ...)
 #if DEBUG
 	Result rc = 0;
 	if (R_FAILED(rc = dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize))) {
-		printf("Memory Read failed.\n");
+		util::PrintToNXLink("Memory Read failed.\n");
 	}
 #else
 	dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize); // since the inital pointer will be a valid offset(we assume anyways...) do a read64 call to it and store in offset
@@ -606,4 +605,13 @@ void util::overclockSystem(bool enable) {
 		clkrstSetClockRate(&clkrstSession, enable ? 1600 MHz : 1331 MHz); // Set memory clock
 		clkrstCloseSession(&clkrstSession);
 	}
+}
+
+void util::PrintToNXLink(const char* format, ...) {
+#if DEBUG_PRINTF
+	va_list args;
+	va_start(args, format);
+	vprintf(format, args);
+	va_end(args);
+#endif
 }

@@ -116,5 +116,7 @@ namespace util
     bool isServiceRunning(const char* serviceName);
 
     void overclockSystem(bool enable);
+
+    void PrintToNXLink(const char *format, ...);
 }
 #endif // UTIL_H

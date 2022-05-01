@@ -17,3 +17,5 @@
 #define DEBUG_UI							0
 //draw debug statistics
 #define DEBUG_OV							0
+//print debugging information to console (nxlink)
+#define DEBUG_PRINTF						0

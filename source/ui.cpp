@@ -523,7 +523,7 @@ namespace dbk {
         }
 
         if (mainAddr == 0x00) {
-            printf("Error: mainAddr\n");
+            util::PrintToNXLink("Error: mainAddr\n");
             ErrorSimpCheck();
             return;
         }
@@ -532,7 +532,7 @@ namespace dbk {
         dmntchtReadCheatProcessMemory(mainAddr + EventFlagOffset + (346 * 2), &IsDreamingBed, sizeof(u16));
 
         if (dreamstrval == 0x0 /*|| IsDreamingBed == 0x0*/) {
-            printf("Error: NoDream");
+            util::PrintToNXLink("Error: NoDream");
             ErrorSimpCheck();
             return;
         }
@@ -788,7 +788,7 @@ namespace dbk {
             else {
                 //if last touch was less than a 0.35 seconds ago
                 if (g_last_touch != 0 && ns - g_last_touch < 350'000'000) {
-                    //printf("change speed\n");
+                    //util::PrintToNXLink("change speed\n");
                     this->m_speed = this->m_speedmax - ((float)(ns - g_last_touch) / 350'000'000) * (this->m_speedmax - this->m_speedmin);
                 }
                 else {

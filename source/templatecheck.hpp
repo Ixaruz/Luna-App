@@ -138,21 +138,21 @@ Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = 
     chkres.additional_info = playernumbers;
 
     if (!mainfound && !issubdir) {
-        printf("missing main.dat\n");
+        util::PrintToNXLink("missing main.dat\n");
         chkres.check_result = CheckResult::MissingFiles;
     }
 
     if (chkres.check_result != CheckResult::NotEnoughPlayers) {
         for (u8 i = 0; i < 8; i++) {
             if (players[i] != personalfound[i]) {
-                printf("missing personal.dat\n");
+                util::PrintToNXLink("missing personal.dat\n");
                 chkres.check_result = CheckResult::MissingFiles;
             }
         }
     }
 
     if (((listcount - maskeditemscount) % 2) == 1) {
-        printf("missing headerfiles (uneven number of files)\n");
+        util::PrintToNXLink("missing headerfiles (uneven number of files)\n");
         chkres.check_result = CheckResult::MissingFiles;
     }
 

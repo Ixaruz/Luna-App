@@ -123,17 +123,17 @@ void createFileStructure() {
     std::string luna_dir = std::string(LUNA_DIR).substr(0, strlen(LUNA_DIR));
     if (access(luna_dir.c_str(), F_OK) == -1) {
         mkdir(luna_dir.c_str(), 0777);
-        printf("created %s\n", luna_dir.c_str());
+        util::PrintToNXLink("created %s\n", luna_dir.c_str());
     }
     std::string luna_dump_dir = std::string(LUNA_DUMP_DIR).substr(0, strlen(LUNA_DUMP_DIR));
     if (access(luna_dump_dir.c_str(), F_OK) == -1) {
         mkdir(luna_dump_dir.c_str(), 0777);
-        printf("created %s\n", luna_dump_dir.c_str());
+        util::PrintToNXLink("created %s\n", luna_dump_dir.c_str());
     }
     std::string luna_template_dir = std::string(LUNA_TEMPLATE_DIR).substr(0, strlen(LUNA_TEMPLATE_DIR));
     if (access(luna_template_dir.c_str(), F_OK) == -1) {
         mkdir(luna_template_dir.c_str(), 0777);
-        printf("created %s\n", luna_template_dir.c_str());
+        util::PrintToNXLink("created %s\n", luna_template_dir.c_str());
     }
 }
 
