@@ -277,7 +277,7 @@ namespace Dump {
 				util::PrintToNXLink("isDir : %d\n", list.isDir(i));
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
-				fsFsCreateDirectory(&g_fsSdmc, newOut.c_str());
+				fsFsCreateDirectory(&g_fsSdmc, newOut.substr(0, newOut.length() - 1).c_str());
 				handleDecryption(newIn, newOut, datcount);
 			}
 			//skip over landname.dat
@@ -312,7 +312,7 @@ namespace Dump {
 				util::PrintToNXLink("isDir : %d\n", list.isDir(i));
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
-				fsFsCreateDirectory(&g_fsSdmc, newOut.c_str());
+				fsFsCreateDirectory(&g_fsSdmc, newOut.substr(0, newOut.length() - 1).c_str());
 				handleEncryption(newIn, newOut, tick, datcount);
 			}
 			//skip over landname.dat
