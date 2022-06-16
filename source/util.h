@@ -118,5 +118,7 @@ namespace util
     void overclockSystem(bool enable);
 
     void PrintToNXLink(const char *format, ...);
+    
+    void PrintResultToNXLink(Result rc);
 }
 #endif // UTIL_H

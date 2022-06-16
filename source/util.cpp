@@ -615,3 +615,7 @@ void util::PrintToNXLink(const char* format, ...) {
 	va_end(args);
 #endif
 }
+
+void util::PrintResultToNXLink(Result rc) {
+	util::PrintToNXLink("Result: %04d-%04d | Value: 0x%X\n", 2000+ R_MODULE(rc), R_DESCRIPTION(rc), rc);
+}

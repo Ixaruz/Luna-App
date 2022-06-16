@@ -277,7 +277,9 @@ namespace Dump {
 				util::PrintToNXLink("isDir : %d\n", list.isDir(i));
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
-				fsFsCreateDirectory(&g_fsSdmc, newOut.substr(0, newOut.length() - 1).c_str());
+				mkdir(newOut.c_str(), 0777);
+				//Result rc = fsFsCreateDirectory(&g_fsSdmc, newOut.c_str());
+				//util::PrintResultToNXLink(rc);
 				handleDecryption(newIn, newOut, datcount);
 			}
 			//skip over landname.dat
@@ -312,7 +314,9 @@ namespace Dump {
 				util::PrintToNXLink("isDir : %d\n", list.isDir(i));
 				std::string newIn = in + list.getItem(i) + "/";
 				std::string newOut = out + list.getItem(i) + "/";
-				fsFsCreateDirectory(&g_fsSdmc, newOut.substr(0, newOut.length() - 1).c_str());
+				mkdir(newOut.c_str(), 0777);
+				//Result rc = fsFsCreateDirectory(&g_fsSdmc, newOut.c_str());
+				//util::PrintResultToNXLink(rc);
 				handleEncryption(newIn, newOut, tick, datcount);
 			}
 			//skip over landname.dat
@@ -403,17 +407,26 @@ namespace Dump {
 		std::string strislandname = util::getIslandNameASCII(g_playerAddr);
 
 		g_pathOut += strislandname.empty() ? "[DA-" + util::getDreamAddrString(g_mainAddr) + "]" : ("[DA-" + util::getDreamAddrString(g_mainAddr) + "] " + strislandname);
-		//g_pathOut += "/";
-		fsFsCreateDirectory(&g_fsSdmc, g_pathOut.c_str());
+		g_pathOut += "/";
+		util::PrintToNXLink((g_pathOut + "\n").c_str());
+		//Result rc = fsFsCreateDirectory(&g_fsSdmc, g_pathOut.c_str());
+		//util::PrintResultToNXLink(rc);
+		mkdir(g_pathOut.c_str(), 0777);
 		if (!strislandname.empty()) g_dumping_menu->LogAddLine("DA-" + util::getDreamAddrString(g_mainAddr) + " " + strislandname);
 		else g_dumping_menu->LogAddLine("DA-" + util::getDreamAddrString(g_mainAddr));
-		g_pathOut += "/" + std::string(dreamtime);
-		fsFsCreateDirectory(&g_fsSdmc, g_pathOut.c_str());
+		g_pathOut += std::string(dreamtime) + "/";
+		util::PrintToNXLink((g_pathOut + "\n").c_str());
+		//idk why, but fsFsCreateDirectory REALLY doesn't like the date_format directory name, no matter how i formatted it. so i resort to mkdir, 
+		//even though it's kinda nasty to use 2 file system implementations at once
+		mkdir(g_pathOut.c_str(), 0777);
+		//rc = fsFsCreateDirectory(&g_fsSdmc, g_pathOut.c_str());
+		//util::PrintResultToNXLink(rc);
+		//g_pathOut += "/";
 		g_dumping_menu->LogAddLine(std::string(dreamtime));
+		util::PrintToNXLink(dreamtime);
 		u32 randweather = util::GetWeatherRandomSeed(g_mainAddr);
 		util::PrintToNXLink("randweatherseed: %d", randweather);
 		g_dumping_menu->LogAddLine("Weather Seed: " + std::to_string(util::GetWeatherRandomSeed(g_mainAddr)));
-		g_pathOut += "/";
 		addProgress(0.10f);
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsDecrypt;
 #else
@@ -536,6 +549,7 @@ namespace Dump {
 		fsFileWrite(&md, SaveHeaderSize + EventFlagOffset + (362 * 2), &EnableMyDream, sizeof(u16), FsWriteOption_Flush);
 		fsFileWrite(&md, SaveHeaderSize + EventFlagOffset + (364 * 2), &DreamUploadPlayerHaveCreatorID, sizeof(u16), FsWriteOption_Flush);
 
+		/*
 		util::PrintToNXLink("Account Table Buffer:\n");
 		for (int i = 0; i < g_AccountTableSize; i++) {
 			if (((i+1) % 16) == 0) {
@@ -546,6 +560,8 @@ namespace Dump {
 			}
 		}
 		util::PrintToNXLink("\n");
+		*/
+
 		//write AccountUID linkage (for Nintendo Switch Online)
 		for (u8 i = 0; i < 8; i++) {
 			if (g_players[i]) {
@@ -700,11 +716,13 @@ namespace Dump {
 			};
 
 			storageSize = storageSizes[houselvl + RcoStorageExpansion_v200_AddLevel];
-
+			
+			/*
 			util::PrintToNXLink("Houselevel player %d: %d\n", i, houselvl);
 			util::PrintToNXLink("Storage expansion 2.0.0: %d\n", RcoStorageExpansion_v200_AddLevel);
 			util::PrintToNXLink("resulting storage size: %d\n", storageSize);
-
+			*/
+			
 			u16 Update200Flags[] = {
 				MainmenuRecipe_v2,						//Be a Chef! DIY Recipes+
 				MainmenuMydesignPatternPlus,			//Custom Designs Patterns+
@@ -760,7 +778,7 @@ namespace Dump {
 
 			u16 g_SpecialityFruit = 0;
 			dmntchtReadCheatProcessMemory(g_mainAddr + SaveFgOffset + SpecialityFruitOffset, &g_SpecialityFruit, sizeof(u16));
-			util::PrintToNXLink("SpecialityFruit: %04d\n", g_SpecialityFruit);
+			//util::PrintToNXLink("SpecialityFruit: %04d\n", g_SpecialityFruit);
 			//util::PrintToNXLink("Smoothie: 0x%04X\n", TownfruitSmoothiesMap.find(g_SpecialityFruit)->second);
 			util::SetFlag(g_RecipeBook, TownfruitSmoothiesMap.find(g_SpecialityFruit)->second, MainmenuRecipe_v2);
 
@@ -770,6 +788,7 @@ namespace Dump {
 				util::SetFlag(g_RecipeBook, 0x0B7, MainmenuRecipe);
 			}
 
+			/*
 			util::PrintToNXLink("Recipe Book:\n");
 			for (int i = 0; i < 0x100; i++) {
 				if (((i + 1) % 16) == 0) {
@@ -813,6 +832,8 @@ namespace Dump {
 			util::PrintToNXLink("AddEyeColor: %d\n", AddHalloweenColor[1]);
 			util::PrintToNXLink("AddCheekColor: %d\n", AddHalloweenColor[2]);
 			util::PrintToNXLink("Halloween Character Colors: 0x%X\n", (HalloweenCharacterColors[0] >> (0x33C8 % 8)) & 0x7);
+			*/
+
 #if DEBUG
 			/*
 			g_dumping_menu->LogAddLine("AddHairStyle1: " + std::to_string(HairStyleColor[0]));
