@@ -3,6 +3,7 @@
 #include <cstring>
 #include <vector>
 #include <cstdio>
+#include <algorithm>
 #include <cstdarg>		//va_list and stuff
 #include <map>
 #include <cstdlib>

@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: 
-       image: devkitpro/devkita64:20220216
+       image: devkitpro/devkita64
     steps:
       - name: checkout repo
         uses: actions/checkout@v3
