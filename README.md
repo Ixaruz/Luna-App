@@ -1,7 +1,7 @@
 Luna
 =====
 <div>
-  <span>English</span> / <a href="https://github.com/Ixaruz/Luna-App/edit/main/README-de.md">German (Deutsch)</a>
+  <span>English</span> / <a href="https://github.com/Ixaruz/Luna-App/blob/main/README-de.md">German (Deutsch)</a>
 </div>
 
 ![Banner](bannerslim.png?raw=true)
