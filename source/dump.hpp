@@ -295,7 +295,7 @@ namespace Dump {
 				std::string dataPathOut = out + list.getItem(i);
 				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
 					DecryptPair(dataPathIn, dataPathOut);
-					addProgress(0.30f / datcount);
+					addProgress(0.20f / datcount);
 				}
 			}
 		}
@@ -333,7 +333,7 @@ namespace Dump {
 				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
 					Hash(dataPathIn);
 					EncryptPair(dataPathIn, dataPathOut, tick);
-					addProgress(0.30f / datcount);
+					addProgress(0.40f / datcount);
 				}
 			}
 		}
@@ -438,7 +438,7 @@ namespace Dump {
 		g_dumping_menu->LogAddLine("Decrypting save files...");
 		float progress = g_progress_percent_last_function;
 		handleDecryption(g_TemplateIn, g_pathOut, g_datcount);
-		setProgress(progress + 0.30f);
+		setProgress(progress + 0.20f);
 		g_dumping_menu->LogEditLastElement("Decrypting save files: successful");
 #if !DEBUG_UI
 		*g_dumping_state = dbk::DumpingMenu::DumpState::NeedsRW;
@@ -933,7 +933,7 @@ namespace Dump {
 		float progress = g_progress_percent_last_function;
 		//this shouldnt be an issue, since the directory lists only get fetched once at the start
 		handleEncryption(g_pathOut, g_pathOut, currenttick, g_datcount);
-		setProgress(progress + 0.30f);
+		setProgress(progress + 0.40f);
 		g_dumping_menu->LogEditLastElement("Hashing and encrypting save files: successful");
 		fsFsClose(&g_fsSdmc);
 		delete g_AccountTableBuffer;
