@@ -6,7 +6,7 @@ Luna
 
 ![Banner](bannerslim.png?raw=true)
 =====
-[![2.0.0](https://img.shields.io/badge/Version-2.0.0-20306a)](#) [![2.0.1](https://img.shields.io/badge/Version-2.0.1-20306a)](#) [![2.0.2](https://img.shields.io/badge/Version-2.0.2-20306a)](#) [![2.0.3](https://img.shields.io/badge/Version-2.0.3-20306a)](#) [![2.0.4](https://img.shields.io/badge/Version-2.0.4-20306a)](#) [![2.0.5](https://img.shields.io/badge/Version-2.0.5-20306a)](#)  
+[![2.0.0](https://img.shields.io/badge/Version-2.0.0-20306a)](#) [![2.0.1](https://img.shields.io/badge/Version-2.0.1-20306a)](#) [![2.0.2](https://img.shields.io/badge/Version-2.0.2-20306a)](#) [![2.0.3](https://img.shields.io/badge/Version-2.0.3-20306a)](#) [![2.0.4](https://img.shields.io/badge/Version-2.0.4-20306a)](#) [![2.0.5](https://img.shields.io/badge/Version-2.0.5-20306a)](#) [![2.0.6](https://img.shields.io/badge/Version-2.0.6-20306a)](#)  
 Luna is a homebrew app designed to dump Animal Crossing: New Horizons islands you visit.
 
 ## Disclaimer & License
