@@ -78,6 +78,7 @@ extern const std::vector<u64> BID = {
 	0x205F55C725C16C6F, //2.0.3
 	0x372C5EA461D03A7D, //2.0.4
 	0x747A5B4CBC530AED, //2.0.5
+	0x15765149DF53BA41, //2.0.6
 };
 
 extern const std::vector<u64> VersionPointerOffset = {
@@ -87,6 +88,7 @@ extern const std::vector<u64> VersionPointerOffset = {
 	0x4BAEF28, //2.0.3
 	0x4C1AD20, //2.0.4
 	0x4C1AD20, //2.0.5
+	0x4C1AD20, //2.0.6
 };
 
 extern const u32 REV_200_MAIN_SIZE = 0x8F1BB0;

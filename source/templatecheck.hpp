@@ -33,6 +33,7 @@ const std::vector<FileHeaderInfo*> RevisionInfo = std::vector<FileHeaderInfo*>{
     new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 25}, // 2.0.3
     new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 26}, // 2.0.4
     new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 27}, // 2.0.5
+    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 28}, // 2.0.6
 };
 
 namespace temp {
