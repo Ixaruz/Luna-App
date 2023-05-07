@@ -84,13 +84,21 @@ struct IslandName {
 
 extern int versionindex;
 
+enum class Error {
+    Success,
+    GameNotRunning,
+    GameWrongRevision,
+    GameNoIsland,
+    TemplateMissing,
+    TemplateMissingFiles,
+    TemplateWrongRevision,
+    TemplateNotEnoughPlayers,
+};
+
 namespace util
 {
     //returns true if version is valid
     bool findVersionIndex(u64 versionBID);
-
-    //removes char from C++ string
-    void stripChar(char _c, std::string& _s);
 
     std::string getIslandNameASCII(u64 playerAddr);
 
@@ -100,15 +108,20 @@ namespace util
 
     IslandName getIslandName(u64 playerAddr);
 
+    //removes char from C++ string
+    void stripChar(char _c, std::string& _s);
+
+    std::string getFilename(std::string& path);
+
     u64 FollowPointerMain(u64 pointer, ...);
 
     bool getFlag(unsigned char data[], int bitIndex);
 
+    void SetFlag(u8* Data, int bitIndex, u16 value);
+
     void setBitBequalsA(u16 arrA[], int arrlen, unsigned char* B, int bitIndexOffset);
 
     void setBitBequalsA(u16 A, unsigned char* B, int bitIndexOffset);
-
-    void SetFlag(u8* Data, int bitIndex, u16 value);
 
     std::string GetLastTimeSaved(u64 mainAddr);
     
@@ -120,6 +133,8 @@ namespace util
 
     void PrintToNXLink(const char *format, ...);
     
+    void PrintToNXLink(std::string message);
+
     void PrintResultToNXLink(Result rc);
 }
 #endif // UTIL_H

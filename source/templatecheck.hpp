@@ -12,16 +12,8 @@ typedef struct {
     /* 0x0E */ u16 SaveRevision;
 } FileHeaderInfo;
 
-enum class CheckResult {
-    Success,
-    NoTemplate,
-    MissingFiles,
-    WrongRevision,
-    NotEnoughPlayers,
-};
-
-struct Check {
-    CheckResult check_result;
+struct TemplateCheckResult {
+    Error error;
     std::string additional_info;
 };
 
@@ -36,126 +28,135 @@ const std::vector<FileHeaderInfo*> RevisionInfo = std::vector<FileHeaderInfo*>{
     new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 28}, // 2.0.6
 };
 
-namespace temp {
-    std::string getFilename(std::string& path) {
-        size_t extPos = path.find_last_of('.'), slPos = path.find_last_of('/');
-        if (extPos == path.npos)
-            return "";
+class TemplateCheck {
+private:
+    bool players[8] = { false };
+    bool personalfound[8] = { false };
+    TemplateCheckResult result = { Error::Success, "" };
 
-        return path.substr(slPos + 1, extPos);
-    }
-}
-
-static bool players[8] = { false };
-static bool personalfound[8] = { false };
-
-Check CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = false) {
     FsFileSystem fsSdmc;
-    FsFile check;
-    u64 bytesread = 0;
-    fsOpenSdCardFileSystem(&fsSdmc);
-    static FileHeaderInfo checkDAT = { 0 };
-    Check chkres;
-    chkres.check_result = CheckResult::Success;
-    bool mainfound = false;
-    bool correctRevision = false;
+
     u8 maskeditemscount = 0;
 
-    bool exemptfrommemread = false;
-
-    fs::dirList list(path);
-    u32 listcount = list.getCount();
-
-    if (listcount == 0) {
-        chkres.check_result = CheckResult::NoTemplate;
-        return chkres;
-    }
-
-    if (mainAddr == 0x00) {
-        exemptfrommemread = true;
-    }
-
-    for (u32 i = 0; i < listcount; i++) {
-        //skip over landname.dat
-        if (list.getItem(i) == "landname.dat") {
-            maskeditemscount++;
-            continue;
-        }
-
-
-        if (list.getItemExt(i) != "dat") {
-            maskeditemscount++;
-            if (list.isDir(i)) {
-                std::string tobechecked = path + list.getItem(i) + "/";
-                chkres = CheckTemplateFiles(tobechecked, mainAddr, true);
-                if (chkres.check_result != CheckResult::Success) {
-                    return chkres;
-                }
-            }
-        }
-
-        else {
-            std::string tobechecked = path + list.getItem(i);
-            //check the Header files only
-            if ((list.getItem(i).find("Header") != std::string::npos)) {
-                char pathbuffer[FS_MAX_PATH] = { 0 };
-                std::snprintf(pathbuffer, FS_MAX_PATH, tobechecked.c_str());
-                fsFsOpenFile(&fsSdmc, pathbuffer, FsOpenMode_Read, &check);
-                fsFileRead(&check, 0, &checkDAT, sizeof(FileHeaderInfo), FsReadOption_None, &bytesread);
-                for (auto &r : RevisionInfo) {
-                    if(memcmp(r, &checkDAT, sizeof(FileHeaderInfo)) == 0) correctRevision = true;
-                }
-                if (!correctRevision) {
-                    chkres.check_result = CheckResult::WrongRevision;
-                    char revision[50];
-                    std::snprintf(revision, 50, "M = 0x%X, m = 0x%X, rev = %2u", checkDAT.Major, checkDAT.Minor, checkDAT.SaveRevision);
-                    chkres.additional_info = std::string(revision);
-                    return chkres;
-                }
-            }
-            if (temp::getFilename(tobechecked) == "main.dat") mainfound = true;
-            if (issubdir) {
-                size_t slPos = tobechecked.find_last_of('/');
-                u8 playernumber = std::stoi(tobechecked.substr(slPos - 1, 1));
-                if (temp::getFilename(tobechecked) == "personal") personalfound[playernumber] = true;
-            }
-        }
-    }
-
-    static std::string playernumbers = "";
-    if (!exemptfrommemread) {
-        for (u8 i = 0; i < 8; i++) {
-            u128 AccountUID = 0;
-            dmntchtReadCheatProcessMemory(mainAddr + GSavePlayerVillagerAccountOffset + i * GSavePlayerVillagerAccountSize, &AccountUID, 0x10);
-            if (AccountUID != 0) {
-                if (access(std::string(std::string(LUNA_TEMPLATE_DIR) + "Villager" + std::to_string(i)).c_str(), F_OK) == -1) {
-                    chkres.check_result = CheckResult::NotEnoughPlayers;
-                    playernumbers.append((playernumbers.empty() ? "" : ", ") + std::to_string(i));
+    void checkPlayers(u64 mainAddr) {
+        if (mainAddr != 0x00) {
+            static std::string playernumbers = "";
+            for (u8 i = 0; i < 8; i++) {
+                u128 AccountUID = 0;
+                dmntchtReadCheatProcessMemory(mainAddr + GSavePlayerVillagerAccountOffset + i * GSavePlayerVillagerAccountSize, &AccountUID, 0x10);
+                if (AccountUID != 0) {
                     players[i] = true;
+                    if (access(std::string(std::string(LUNA_TEMPLATE_DIR) + "Villager" + std::to_string(i)).c_str(), F_OK) == -1) {
+                        result.error = Error::TemplateNotEnoughPlayers;
+                        playernumbers.append((playernumbers.empty() ? "" : ", ") + std::to_string(i));
+                    }
+                }
+            }
+            result.additional_info = playernumbers;
+        }
+    }
+public:
+    TemplateCheck() {
+        fsOpenSdCardFileSystem(&fsSdmc);
+    }
+
+    ~TemplateCheck(){
+        fsFsClose(&fsSdmc);
+    }
+
+    TemplateCheckResult CheckTemplateFiles(const std::string& path, u64 mainAddr, bool issubdir = false) {
+
+        if (!issubdir) {
+            checkPlayers(mainAddr);
+        }
+
+        FsFile check;
+        u64 bytesread = 0;
+
+        static FileHeaderInfo checkDAT = { 0 };
+
+        bool mainfound = false;
+        bool correctRevision = false;
+
+        fs::dirList list(path);
+        u32 listcount = list.getCount();
+
+        if (listcount == 0) {
+            result.error = Error::TemplateMissing;
+            return result;
+        }
+
+        for (u32 i = 0; i < listcount; i++) {
+            //skip over landname.dat
+            if (list.getItem(i) == "landname.dat") {
+                maskeditemscount++;
+                continue;
+            }
+            //either a misc file or a folder that we have to check inside
+            if (list.getItemExt(i) != "dat") {
+                maskeditemscount++;
+                if (list.isDir(i)) {
+                    std::string tobechecked = path + list.getItem(i) + "/";
+                    result = CheckTemplateFiles(tobechecked, mainAddr, true);
+                    if (result.error != Error::Success) {
+                        return result;
+                    }
+                }
+            }
+            //.dat files
+            else {
+                std::string tobechecked = path + list.getItem(i);
+                //check the Header files only
+                if ((list.getItem(i).find("Header") != std::string::npos)) {
+                    char pathbuffer[FS_MAX_PATH] = { 0 };
+                    std::snprintf(pathbuffer, FS_MAX_PATH, tobechecked.c_str());
+                    fsFsOpenFile(&fsSdmc, pathbuffer, FsOpenMode_Read, &check);
+                    fsFileRead(&check, 0, &checkDAT, sizeof(FileHeaderInfo), FsReadOption_None, &bytesread);
+                    for (auto& r : RevisionInfo) {
+                        if (memcmp(r, &checkDAT, sizeof(FileHeaderInfo)) == 0) correctRevision = true;
+                    }
+                    if (!correctRevision) {
+                        result.error = Error::TemplateWrongRevision;
+                        char revision[50];
+                        std::snprintf(revision, 50, "M = 0x%X, m = 0x%X, rev = %2u", checkDAT.Major, checkDAT.Minor, checkDAT.SaveRevision);
+                        result.additional_info = std::string(revision);
+                        return result;
+                    }
+                }
+                if (util::getFilename(tobechecked) == "main.dat") mainfound = true;
+                if (issubdir) {
+                    size_t slPos = tobechecked.find_last_of('/');
+                    u8 playernumber = std::stoi(tobechecked.substr(slPos - 1, 1));
+                    if (util::getFilename(tobechecked) == "personal.dat") {
+                        personalfound[playernumber] = true;
+                        //util::PrintToNXLink("Villager%d found\n", playernumber);
+                    }
                 }
             }
         }
-    }
-    chkres.additional_info = playernumbers;
 
-    if (!mainfound && !issubdir) {
-        util::PrintToNXLink("missing main.dat\n");
-        chkres.check_result = CheckResult::MissingFiles;
-    }
+        if (!issubdir) {
+            if (!mainfound) {
+                util::PrintToNXLink("missing main.dat\n");
+                result.error = Error::TemplateMissingFiles;
+            }
 
-    if (chkres.check_result != CheckResult::NotEnoughPlayers) {
-        for (u8 i = 0; i < 8; i++) {
-            if (players[i] != personalfound[i]) {
-                util::PrintToNXLink("missing personal.dat\n");
-                chkres.check_result = CheckResult::MissingFiles;
+            if (result.error != Error::TemplateNotEnoughPlayers) {
+                for (u8 i = 0; i < 8; i++) {
+                    if (players[i] && !personalfound[i]) {
+                        util::PrintToNXLink("missing personal.dat\n");
+                        result.error = Error::TemplateMissingFiles;
+                    }
+                }
             }
         }
+
+        if (((listcount - maskeditemscount) % 2) == 1) {
+            util::PrintToNXLink("missing headerfiles (uneven number of files)\n");
+            result.error = Error::TemplateMissingFiles;
+        }
+
+        return result;
     }
 
-    if (((listcount - maskeditemscount) % 2) == 1) {
-        util::PrintToNXLink("missing headerfiles (uneven number of files)\n");
-        chkres.check_result = CheckResult::MissingFiles;
-    }
-
-    return chkres;
-}
+};

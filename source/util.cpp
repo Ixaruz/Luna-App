@@ -123,16 +123,6 @@ extern const std::vector<FileHashRegion*> REV_200_PERSONAL = std::vector<FileHas
 
 extern int versionindex = 0;
 
-bool util::findVersionIndex(u64 versionBID) {
-	auto p = std::find(BID.begin(), BID.end(), versionBID);
-	if (p == BID.end()) return false;
-	else {
-		versionindex = std::distance(BID.begin(), p);
-		util::PrintToNXLink("current version: 2.0.%d\n", versionindex);
-		return true;
-	}
-}
-
 static const char verboten[] = { ',', '/', '\\', '<', '>', ':', '"', '|', '?', '*', '™', '©', '®' };
 
 
@@ -352,272 +342,292 @@ static bool isJAP(const u16& t) {
 }
 
 static bool isKATAKANA(const u16& t) {
-	return (t > 0x30A1);
+	return (t > 0x30A1 && isJAP(t));
 }
 
-std::string util::getIslandNameASCII(u64 playerAddr)
-{
-	u16 name[0xB*2] = { 0 };
-	u16 namechar = 0, lastchar = 0;
-	JapLetter lastletter = {0x0000, "\0"};
-	u8 lastvalidindex = 0;
-	int currentoffset = 0;
-	int currentletteroffset = 0;
-	static bool lastwassokuon = false;
-
-	//0xB - 0x1 bc we dont need the 0x2 to determine the end of the string.
-	for (u8 i = 0; i < 0xA; i++) {
-		dmntchtReadCheatProcessMemory(playerAddr + PersonalID + 0x4 + (i * 0x2), &namechar, 0x2);
-		//make sure we can use this fuck string in a path
-		if ((isASCII(namechar) && !isVerboten(namechar)) || namechar == 0) {
-			name[i + currentoffset] = namechar;
-		}
+namespace util {
+	bool findVersionIndex(u64 versionBID) {
+		auto p = std::find(BID.begin(), BID.end(), versionBID);
+		if (p == BID.end()) return false;
 		else {
-			if (isJAP(namechar)) {
-				currentletteroffset = 0;
-				JapLetter currentletter = JAP[getelementindex(JAP, namechar)];
-				if (currentletter.flag != JapFlag::sokuon) {
-					const char* romeqiv = currentletter.romaji;
-					//chouon deez nuts
-					if (i != 0 || currentoffset != 0) {
-						//check if the last character isn't the current vowel (ga + a = gaa)
-						if (name[i + currentoffset - 1] != *romeqiv) {
-							currentoffset -= (int)currentletter.flag;
-						}
-						//special cases of ya, yu, yo with shi, chi and ji (= sha, shu, sho)
-						if (currentletter.flag == JapFlag::small) {
-							if (currentletter.UCS >= 0x30E3 && currentletter.UCS <= 0x30E7) {
-								if (lastletter.UCS == 0x30B7 || lastletter.UCS == 0x30B8 || lastletter.UCS == 0x30C1 || lastletter.UCS == 0x30C2) {
-									//remove first letter (being 'y')
-									currentletteroffset = 1;
-								}
-							}
-							if (currentletter.UCS >= 0x3083 && currentletter.UCS <= 0x3087) {
-								if (lastletter.UCS == 0x3057 || lastletter.UCS == 0x3058 || lastletter.UCS == 0x3061 || lastletter.UCS == 0x3062) {
-									//remove first letter (being 'y')
-									currentletteroffset = 1;
-								}
-							}
-						}
-					}
-					//sokuon deez nuts
-					//take the consonant and put it in the last letter spot
-					if (lastwassokuon) {
-						name[i + currentoffset - 1] = *(romeqiv + currentletteroffset);
-						lastwassokuon = false;
-					}
-					name[i + currentoffset] = *(romeqiv + currentletteroffset);
-					//this runs when the romaji equivalent is longer than 1 character
-					for (size_t j = 1; j < std::strlen(romeqiv + currentletteroffset); j++) {
-						currentoffset++;
-						name[i + currentoffset] = *(romeqiv + currentletteroffset + j);
-					}
-				}
-				else {
-					lastwassokuon = true;
-				}
-				lastletter = currentletter;
-			}
-			//chouon deez nuts 
-			//the elongation symbol is only used in KATAKANA
-			else if (namechar == 0x30FC && isJAP(lastchar) && isKATAKANA(lastchar)) {
-				name[i + currentoffset] = name[i + currentoffset - 1];
-				
+			versionindex = std::distance(BID.begin(), p);
+			util::PrintToNXLink("current version: 2.0.%d\n", versionindex);
+			return true;
+		}
+	}
+
+	std::string getIslandNameASCII(u64 playerAddr)
+	{
+		u16 name[0xB * 2] = { 0 };
+		u16 namechar = 0, lastchar = 0;
+		JapLetter lastletter = { 0x0000, "\0" };
+		u8 lastvalidindex = 0;
+		int currentoffset = 0;
+		int currentletteroffset = 0;
+		static bool lastwassokuon = false;
+
+		//0xB - 0x1 bc we dont need the 0x2 to determine the end of the string.
+		for (u8 i = 0; i < 0xA; i++) {
+			dmntchtReadCheatProcessMemory(playerAddr + PersonalID + 0x4 + (i * 0x2), &namechar, 0x2);
+			//make sure we can use this fuck string in a path
+			if ((isASCII(namechar) && !isVerboten(namechar)) || namechar == 0) {
+				name[i + currentoffset] = namechar;
 			}
 			else {
-				util::PrintToNXLink("invalid letter: 0x%04X\n", namechar);
-				name[i + currentoffset] = 0x005F;
+				if (isJAP(namechar)) {
+					currentletteroffset = 0;
+					JapLetter currentletter = JAP[getelementindex(JAP, namechar)];
+					if (currentletter.flag != JapFlag::sokuon) {
+						const char* romeqiv = currentletter.romaji;
+						//chouon deez nuts
+						if (i != 0 || currentoffset != 0) {
+							//check if the last character isn't the current vowel (ga + a = gaa)
+							if (name[i + currentoffset - 1] != *romeqiv) {
+								currentoffset -= (int)currentletter.flag;
+							}
+							//special cases of ya, yu, yo with shi, chi and ji (= sha, shu, sho)
+							if (currentletter.flag == JapFlag::small) {
+								if (currentletter.UCS >= 0x30E3 && currentletter.UCS <= 0x30E7) {
+									if (lastletter.UCS == 0x30B7 || lastletter.UCS == 0x30B8 || lastletter.UCS == 0x30C1 || lastletter.UCS == 0x30C2) {
+										//remove first letter (being 'y')
+										currentletteroffset = 1;
+									}
+								}
+								if (currentletter.UCS >= 0x3083 && currentletter.UCS <= 0x3087) {
+									if (lastletter.UCS == 0x3057 || lastletter.UCS == 0x3058 || lastletter.UCS == 0x3061 || lastletter.UCS == 0x3062) {
+										//remove first letter (being 'y')
+										currentletteroffset = 1;
+									}
+								}
+							}
+						}
+						//sokuon deez nuts
+						//take the consonant and put it in the last letter spot
+						if (lastwassokuon) {
+							name[i + currentoffset - 1] = *(romeqiv + currentletteroffset);
+							lastwassokuon = false;
+						}
+						name[i + currentoffset] = *(romeqiv + currentletteroffset);
+						//this runs when the romaji equivalent is longer than 1 character
+						for (size_t j = 1; j < std::strlen(romeqiv + currentletteroffset); j++) {
+							currentoffset++;
+							name[i + currentoffset] = *(romeqiv + currentletteroffset + j);
+						}
+					}
+					else {
+						lastwassokuon = true;
+					}
+					lastletter = currentletter;
+				}
+				//chouon deez nuts 
+				else if (namechar == 0x30FC && isJAP(lastchar)) {
+					name[i + currentoffset] = name[i + currentoffset - 1];
+
+				}
+				else {
+					PrintToNXLink("invalid letter: 0x%04X\n", namechar);
+					name[i + currentoffset] = 0x005F;
+				}
+			}
+			lastchar = namechar;
+			lastvalidindex = i + currentoffset;
+		}
+
+		//make sure there is no space on path ends
+		if (name[lastvalidindex] == 0x20) {
+			name[lastvalidindex] = 0x0000;
+		}
+
+		//nullterminator pain
+		u8 name_string[0x16 * 2] = { 0 };
+		//pain
+		utf16_to_utf8(name_string, name, sizeof(name_string) / sizeof(u8));
+
+		for (int i = 0; i < sizeof(name_string); i++) {
+			PrintToNXLink("%c", name_string[i]);
+		}
+		PrintToNXLink("\n");
+
+		return std::string((char*)name_string);
+	}
+
+	std::string getDreamAddrString(u64 mainAddr)
+	{
+		u64 cDreamID = 0x0;
+		char buffer[0x10] = { 0 };
+
+
+		dmntchtReadCheatProcessMemory(mainAddr + DreamIDOffset, &cDreamID, sizeof(u64));
+		sprintf(buffer, "%012li", cDreamID);
+
+		std::string str1 = std::string(buffer).substr(0, 4);
+		std::string str2 = std::string(buffer).substr(4, 4);
+		std::string str3 = std::string(buffer).substr(8, 4);
+
+		return std::string(str1 + "-" + str2 + "-" + str3);
+	}
+
+	TimeCalendarTime getDreamTime(u64 mainAddr)
+	{
+		TimeCalendarTime dreamtime;
+		u64 DreamTimeOffs = DreamIDOffset + 0x40;
+		dmntchtReadCheatProcessMemory(mainAddr + DreamTimeOffs, &dreamtime, sizeof(TimeCalendarTime));
+		return dreamtime;
+	}
+
+	IslandName getIslandName(u64 playerAddr)
+	{
+		//0x16 byte = 0xB wide-chars/uint_16
+		u16 name[0xB];
+
+		dmntchtReadCheatProcessMemory(playerAddr + PersonalID + 0x4, name, 0x16);
+		IslandName ret;
+		memcpy(ret.name, name, sizeof(name));
+
+		return ret;
+	}
+
+	void stripChar(char _c, std::string& _s)
+	{
+		size_t pos = 0;
+		while ((pos = _s.find(_c)) != _s.npos)
+			_s.erase(pos, 1);
+	}
+
+	std::string getFilename(std::string& path) {
+		size_t extPos = path.find_last_of('.'), slPos = path.find_last_of('/');
+		if (extPos == path.npos)
+			return "";
+
+		return path.substr(slPos + 1, extPos);
+	}
+
+	u64 FollowPointerMain(u64 pointer, ...)
+	{
+		u64 offset;
+		va_list pointers;
+		va_start(pointers, pointer);
+
+		DmntCheatProcessMetadata metadata;
+		dmntchtGetCheatProcessMetadata(&metadata);
+
+		size_t bufferSize = sizeof offset;
+#if DEBUG
+		Result rc = 0;
+		if (R_FAILED(rc = dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize))) {
+			PrintToNXLink("Memory Read failed.\n");
+		}
+#else
+		dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize); // since the inital pointer will be a valid offset(we assume anyways...) do a read64 call to it and store in offset
+#endif
+
+
+		//return 0xFFFFFFFFFFFFFFFF;
+		pointer = va_arg(pointers, u64); // go to next argument
+		while (pointer != 0xFFFFFFFFFFFFFFFF) // the last arg needs to be -1 in order for the while loop to exit
+		{
+			dmntchtReadCheatProcessMemory(pointer + offset, &offset, bufferSize);
+			//return 0xFFFFFFFFFFFFFFFF;
+			pointer = va_arg(pointers, u64);
+		}
+		va_end(pointers);
+		return offset;
+	}
+
+	bool getFlag(unsigned char data[], int bitIndex)
+	{
+		unsigned char b = data[bitIndex >> 3];
+		unsigned char mask = 1 << (bitIndex & 7);
+		return (b & mask) != 0;
+	}
+
+	void SetFlag(u8* Data, int bitIndex, u16 value) {
+		int offset = (bitIndex >> 3); //if larger than 8, its the next byte
+		bitIndex &= 7; // ensure bit access is 0-7
+		Data[offset] &= (u8)~(1 << bitIndex);
+		Data[offset] |= (u8)((value ? 1 : 0) << bitIndex);
+	}
+
+	void setBitBequalsA(u16 arrA[], int arrlen, unsigned char* B, int bitIndexOffset) {
+		for (int i = 0; i < arrlen; i++) {
+			if ((arrA[i] == 1) != (getFlag(B, bitIndexOffset + i))) {
+				B[(bitIndexOffset + i) >> 3] ^= (1 << ((i + bitIndexOffset) & 7));
 			}
 		}
-		lastchar = namechar;
-		lastvalidindex = i + currentoffset;
-	}
-	
-	//make sure there is no space on path ends
-	if (name[lastvalidindex] == 0x20) {
-		name[lastvalidindex] = 0x0000;
 	}
 
-	//nullterminator pain
-	u8 name_string[0x16*2] = { 0 };
-	//pain
-	utf16_to_utf8(name_string, name, sizeof(name_string) / sizeof(u8));
-
-	for (int i = 0; i < sizeof(name_string); i++) {
-		util::PrintToNXLink("%c", name_string[i]);
+	void setBitBequalsA(u16 A, unsigned char* B, int bitIndexOffset) {
+		if ((A == 1) != (getFlag(B, bitIndexOffset))) B[bitIndexOffset >> 3] ^= (1 << (bitIndexOffset & 7));
 	}
-	util::PrintToNXLink("\n");
 
-	return std::string((char*)name_string);
-}
-
-
-std::string util::getDreamAddrString(u64 mainAddr)
-{
-	u64 cDreamID = 0x0;
-	char buffer[0x10] = { 0 };
-
-
-	dmntchtReadCheatProcessMemory(mainAddr + DreamIDOffset, &cDreamID, sizeof(u64));
-	sprintf(buffer, "%012li", cDreamID);
-
-	std::string str1 = std::string(buffer).substr(0, 4);
-	std::string str2 = std::string(buffer).substr(4, 4);
-	std::string str3 = std::string(buffer).substr(8, 4);
-
-	return std::string(str1 + "-" + str2 + "-" + str3);
-}
-
-TimeCalendarTime util::getDreamTime(u64 mainAddr)
-{
-	TimeCalendarTime dreamtime;
-	u64 DreamTimeOffs = DreamIDOffset + 0x40;
-	dmntchtReadCheatProcessMemory(mainAddr + DreamTimeOffs, &dreamtime, sizeof(TimeCalendarTime));
-	return dreamtime;
-}
-
-
-IslandName util::getIslandName(u64 playerAddr)
-{
-	//0x16 byte = 0xB wide-chars/uint_16
-	u16 name[0xB];
-
-	dmntchtReadCheatProcessMemory(playerAddr + PersonalID + 0x4, name, 0x16);
-	IslandName ret;
-	memcpy(ret.name, name, sizeof(name));
-
-	return ret;
-}
-
-void util::stripChar(char _c, std::string& _s)
-{
-	size_t pos = 0;
-	while ((pos = _s.find(_c)) != _s.npos)
-		_s.erase(pos, 1);
-}
-
-/**
- * @brief Follow a variable pointer path from main (last arg has to be 0xFFFFFFFFFFFFFFFF)
- */
-u64 util::FollowPointerMain(u64 pointer, ...)
-{
-	u64 offset;
-	va_list pointers;
-	va_start(pointers, pointer);
-
-	DmntCheatProcessMetadata metadata;
-	dmntchtGetCheatProcessMetadata(&metadata);
-
-	size_t bufferSize = sizeof offset;
-#if DEBUG
-	Result rc = 0;
-	if (R_FAILED(rc = dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize))) {
-		util::PrintToNXLink("Memory Read failed.\n");
-	}
-#else
-	dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize); // since the inital pointer will be a valid offset(we assume anyways...) do a read64 call to it and store in offset
-#endif
-
-
-	//return 0xFFFFFFFFFFFFFFFF;
-	pointer = va_arg(pointers, u64); // go to next argument
-	while (pointer != 0xFFFFFFFFFFFFFFFF) // the last arg needs to be -1 in order for the while loop to exit
+	std::string GetLastTimeSaved(u64 mainAddr)
 	{
-		dmntchtReadCheatProcessMemory(pointer + offset, &offset, bufferSize);
-		//return 0xFFFFFFFFFFFFFFFF;
-		pointer = va_arg(pointers, u64);
+		const char* date_format = "%02d.%02d.%04d @ %02d-%02d";
+		char ret[128];
+		TimeCalendarTime time;
+		dmntchtReadCheatProcessMemory(mainAddr + 0x504D20, &time, 0x8);
+		sprintf(ret, date_format, time.day, time.month, time.year, time.hour, time.minute);
+		return (std::string(ret));
+
 	}
-	va_end(pointers);
-	return offset;
-}
 
-bool util::getFlag(unsigned char data[], int bitIndex)
-{
-	unsigned char b = data[bitIndex >> 3];
-	unsigned char mask = 1 << (bitIndex & 7);
-	return (b & mask) != 0;
-}
+	u32 GetWeatherRandomSeed(u64 mainAddr) {
+		u32 randomweatherseed;
+		dmntchtReadCheatProcessMemory(mainAddr + 0x1e35f0 + 0x18, &randomweatherseed, 0x4);
+		return randomweatherseed;
+	}
 
-void util::setBitBequalsA(u16 arrA[], int arrlen, unsigned char* B, int bitIndexOffset) {
-	for (int i = 0; i < arrlen; i++) {
-		if ((arrA[i] == 1) != (util::getFlag(B, bitIndexOffset + i))) {
-			B[(bitIndexOffset + i) >> 3] ^= (1 << ((i + bitIndexOffset) & 7));
+	bool isServiceRunning(const char* serviceName) {
+		// Service hdl;
+		// Result rc = smGetService(&hdl, serviceName);
+		// if (rc == 0)
+		// {
+		//   serviceClose(&hdl);
+		//   return true;
+		// };
+		// return false;
+		u8 tmp = 0;
+		SmServiceName service_name = smEncodeName(serviceName);
+		Result rc = serviceDispatchInOut(smGetServiceSession(), 65100, service_name, tmp);
+		if (R_SUCCEEDED(rc) && tmp & 1)
+			return true;
+		else
+			return false;
+	}
+
+	void overclockSystem(bool enable) {
+		if (hosversionBefore(8, 0, 0)) {
+			pcvSetClockRate(PcvModule_CpuBus, enable ? 1785 MHz : 1020 MHz);  // Set CPU clock
+			pcvSetClockRate(PcvModule_EMC, enable ? 1600 MHz : 1331 MHz);     // Set memory clock
+		}
+		else {
+			ClkrstSession clkrstSession;
+			clkrstOpenSession(&clkrstSession, PcvModuleId_CpuBus, 3);
+			clkrstSetClockRate(&clkrstSession, enable ? 1785 MHz : 1020 MHz); // Set CPU clock
+			clkrstCloseSession(&clkrstSession);
+
+			clkrstOpenSession(&clkrstSession, PcvModuleId_EMC, 3);
+			clkrstSetClockRate(&clkrstSession, enable ? 1600 MHz : 1331 MHz); // Set memory clock
+			clkrstCloseSession(&clkrstSession);
 		}
 	}
-}
 
-void util::setBitBequalsA(u16 A, unsigned char* B, int bitIndexOffset) {
-	if ((A == 1) != (util::getFlag(B, bitIndexOffset))) B[bitIndexOffset >> 3] ^= (1 << (bitIndexOffset & 7));
-}
-
-void util::SetFlag(u8* Data, int bitIndex, u16 value) {
-	int offset = (bitIndex >> 3); //if larger than 8, its the next byte
-	bitIndex &= 7; // ensure bit access is 0-7
-	Data[offset] &= (u8)~(1 << bitIndex);
-	Data[offset] |= (u8)((value ? 1 : 0) << bitIndex);
-}
-
-std::string util::GetLastTimeSaved(u64 mainAddr)
-{
-	const char* date_format = "%02d.%02d.%04d @ %02d-%02d";
-	char ret[128];
-	TimeCalendarTime time;
-	dmntchtReadCheatProcessMemory(mainAddr + 0x504D20, &time, 0x8);
-	sprintf(ret, date_format, time.day, time.month, time.year, time.hour, time.minute);
-	return (std::string(ret));
-
-}
-
-u32 util::GetWeatherRandomSeed(u64 mainAddr) {
-	u32 randomweatherseed;
-	dmntchtReadCheatProcessMemory(mainAddr + 0x1e35f0 + 0x18, &randomweatherseed, 0x4);
-	return randomweatherseed;
-}
-
-bool util::isServiceRunning(const char* serviceName) {
-	// Service hdl;
-	// Result rc = smGetService(&hdl, serviceName);
-	// if (rc == 0)
-	// {
-	//   serviceClose(&hdl);
-	//   return true;
-	// };
-	// return false;
-	u8 tmp = 0;
-	SmServiceName service_name = smEncodeName(serviceName);
-	Result rc = serviceDispatchInOut(smGetServiceSession(), 65100, service_name, tmp);
-	if (R_SUCCEEDED(rc) && tmp & 1)
-		return true;
-	else
-		return false;
-}
-
-void util::overclockSystem(bool enable) {
-	if (hosversionBefore(8, 0, 0)) {
-		pcvSetClockRate(PcvModule_CpuBus, enable ? 1785 MHz : 1020 MHz);  // Set CPU clock
-		pcvSetClockRate(PcvModule_EMC, enable ? 1600 MHz : 1331 MHz);     // Set memory clock
-	}
-	else {
-		ClkrstSession clkrstSession;
-		clkrstOpenSession(&clkrstSession, PcvModuleId_CpuBus, 3);
-		clkrstSetClockRate(&clkrstSession, enable ? 1785 MHz : 1020 MHz); // Set CPU clock
-		clkrstCloseSession(&clkrstSession);
-
-		clkrstOpenSession(&clkrstSession, PcvModuleId_EMC, 3);
-		clkrstSetClockRate(&clkrstSession, enable ? 1600 MHz : 1331 MHz); // Set memory clock
-		clkrstCloseSession(&clkrstSession);
-	}
-}
-
-void util::PrintToNXLink(const char* format, ...) {
+	void PrintToNXLink(const char* format, ...) {
 #if DEBUG_PRINTF
-	va_list args;
-	va_start(args, format);
-	vprintf(format, args);
-	va_end(args);
+		va_list args;
+		va_start(args, format);
+		vprintf(format, args);
+		va_end(args);
 #endif
-}
+	}
 
-void util::PrintResultToNXLink(Result rc) {
-	util::PrintToNXLink("Result: %04d-%04d | Value: 0x%X\n", 2000+ R_MODULE(rc), R_DESCRIPTION(rc), rc);
+	void PrintToNXLink(std::string message) {
+#if DEBUG_PRINTF
+		printf(message.c_str());
+#endif
+	}
+
+	void PrintResultToNXLink(Result rc) {
+		PrintToNXLink("Result: %04d-%04d | Value: 0x%X\n", 2000 + R_MODULE(rc), R_DESCRIPTION(rc), rc);
+	}
 }

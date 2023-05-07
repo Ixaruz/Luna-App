@@ -24,60 +24,11 @@
 extern "C" {
 
     void userAppInit(void) {
-        /*
-        Result rc = 0;
-
-        if (R_FAILED(rc = romfsInit())) {
-            fatalThrow(1);
-        }
-
-        if (R_FAILED(rc = spsmInitialize())) {
-            fatalThrow(2);
-        }
-
-        if (R_FAILED(rc = plInitialize(PlServiceType_User))) {
-            fatalThrow(3);
-        }
-
-        if (R_FAILED(rc = splInitialize())) {
-            fatalThrow(4);
-        }
-
-        if (R_FAILED(rc = nsInitialize())) {
-            fatalThrow(5);
-        }
-
-        if (R_FAILED(rc = hiddbgInitialize())) {
-            fatalThrow(6);
-        }
-
-        if (R_FAILED(rc = pminfoInitialize())) {
-            fatalThrow(7);
-        }
-
-        if (R_FAILED(rc = pmdmntInitialize())) {
-            fatalThrow(8);
-        }
-
-        if (R_FAILED(rc = dmntchtInitialize())) {
-            fatalThrow(9);
-        }
-        
-        if (R_FAILED(rc = dmntchtForceOpenCheatProcess())) {
-            fatalThrow(10);
-        }
-
-        if (R_FAILED(rc = smInitialize())) {
-            fatalThrow(11);
-        }
-        */
-        
-
         setsysInitialize();
         socketInitializeDefault();
         nxlinkStdio();
         nsInitialize();
-        accountInitialize(AccountServiceType_Administrator);
+        //accountInitialize(AccountServiceType_Administrator);
         plInitialize(PlServiceType_User);
         psmInitialize();
         pminfoInitialize();
@@ -90,27 +41,16 @@ extern "C" {
     }
 
     void userAppExit(void) {
-        /*
-        hiddbgExit();
-        nsExit();
-        splExit();
-        plExit();
-        spsmExit();
-        romfsExit();
-        pminfoExit();
-        pmdmntExit();
-        dmntchtExit();
-        smExit();
-        */
         setsysExit();
         socketExit();
         nsExit();
-        accountExit();
+        //accountExit();
         plExit();
         psmExit();
         pminfoExit();
-        pmdmntExit();
-        dmntchtExit();
+        //keep those services alive, bc other programs may be using them at the same time
+        //pmdmntExit();
+        //dmntchtExit();
         romfsExit();
         hidsysExit();
         clkrstExit();

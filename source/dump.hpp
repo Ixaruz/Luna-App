@@ -6,15 +6,6 @@
 #include "luna.h"
 #include "ui.hpp"
 
-
-std::string getFilename(std::string& path) {
-	size_t extPos = path.find_last_of('.'), slPos = path.find_last_of('/');
-	if (extPos == path.npos)
-		return "";
-
-	return path.substr(slPos + 1, extPos);
-}
-
 namespace Dump {
 
 	namespace {
@@ -137,8 +128,8 @@ namespace Dump {
 
 		std::string headerPathIn = dataPathIn.substr(0, dataPathIn.find_last_of('.')) + "Header.dat";
 
-		util::PrintToNXLink(std::string("Data : \t\t" + dataPathIn + "\n").c_str());
-		util::PrintToNXLink(std::string("Headers : \t" + headerPathIn + "\n").c_str());
+		util::PrintToNXLink("Data : \t\t" + dataPathIn + "\n");
+		util::PrintToNXLink("Headers : \t" + headerPathIn + "\n");
 
 		//clear our path buffer or bad things will happen
 		memset(path, 0, FS_MAX_PATH);
@@ -185,7 +176,7 @@ namespace Dump {
 		s64 datasize = 0;
 		fsFileGetSize(&md, &datasize);
 
-		util::PrintToNXLink(std::string("Data : \t\t" + dataPathIn + "\n").c_str());
+		util::PrintToNXLink("Data : \t\t" + dataPathIn + "\n");
 
 		u8 *encData = new u8[datasize];
 		u64 bytesread = 0;
@@ -293,7 +284,7 @@ namespace Dump {
 			else if (list.getItemExt(i) == "dat") {
 				std::string dataPathIn = in + list.getItem(i);
 				std::string dataPathOut = out + list.getItem(i);
-				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
+				if ((util::getFilename(dataPathIn).find("Header") == std::string::npos)) {
 					DecryptPair(dataPathIn, dataPathOut);
 					addProgress(0.20f / datcount);
 				}
@@ -330,7 +321,7 @@ namespace Dump {
 			else if (list.getItemExt(i) == "dat") {
 				std::string dataPathIn = in + list.getItem(i);
 				std::string dataPathOut = out + list.getItem(i);
-				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
+				if ((util::getFilename(dataPathIn).find("Header") == std::string::npos)) {
 					Hash(dataPathIn);
 					EncryptPair(dataPathIn, dataPathOut, tick);
 					addProgress(0.40f / datcount);
@@ -359,7 +350,7 @@ namespace Dump {
 			}
 			else if (list.getItemExt(i) == "dat") {
 				std::string dataPathIn = in + list.getItem(i);
-				if ((getFilename(dataPathIn).find("Header") == std::string::npos)) {
+				if ((util::getFilename(dataPathIn).find("Header") == std::string::npos)) {
 					filecount++;
 				}
 			}
@@ -763,6 +754,7 @@ namespace Dump {
 
 
 			//Editing Recipes based on our flags
+
 			for (u16 i : MainmenuRecipes) {
 				util::SetFlag(g_RecipeBook, i, MainmenuRecipe);
 			}

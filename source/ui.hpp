@@ -250,8 +250,7 @@ namespace dbk {
         virtual void Draw(NVGcontext *vg, u64 ns) override;
     };
 
-    void ErrorOpenACNH(u64 *tid);
-    void ErrorSimpCheck();
+    void showErrorMenu(Error error, std::string additional_info = "");
     void StarRandomizer();
     bool InitializeMenu(u32 screen_width, u32 screen_height);
     void UpdateMenu(u64 ns);

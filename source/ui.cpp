@@ -448,44 +448,48 @@ namespace dbk {
         }
     }
 
-    void ErrorOpenACNH(u64 *tid) {
-        const char* ret = "Please open ACNH!";
+    void showErrorMenu(Error error, std::string additional_info) {
+        switch (error) {
+        case Error::GameNotRunning:
+            {
+                const char* ret = "Please open ACNH!";
 #if DEBUG
-        const char* formatter = "current TID: 0x%016lX";
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, *tid));
+                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, "current TID: 0x%016lX", tid));
 #else
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
+                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
 #endif
-    }
+                break;
+            }
 
-    void ErrorWrongBID(u64 *bid) {
-        const char* ret = "Please update ACNH to the latest version!";
+
+        case Error::GameWrongRevision:
+            {
+                const char* ret = "Please update ACNH to the latest version!";
 #if DEBUG
-        const char* formatter = "current BID: 0x%016lX";
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, *bid));
+                const char* formatter = "current BID: 0x%016lX";
+                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, bid));
 #else
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
+                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
 #endif
-    }
+            break;
+            }
 
-    void ErrorSimpCheck() {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE00A", "No island was found.", "Please try again?", 1));
-    }
-
-    void ErrorNoTemplate() {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "No valid template was found."));
-    }
-
-    void ErrorMissingFiles() {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "You seem to be missing template files."));
-    }
-
-    void ErrorWrongRevision(std::string info) {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Wrong template-save revision.", info.c_str(), 1));
-    }
-
-    void ErrorNotEnoughPlayers(std::string info) {
-        ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Template is lacking:", std::string("Villager" + info).c_str(), 1));
+        case Error::GameNoIsland:
+            ChangeMenu(std::make_shared<ErrorMenu>("\uE00A", "No island was found.", "Please try again?", 1));
+            break;
+        case Error::TemplateMissing:
+            ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "No valid template was found."));
+            break;
+        case Error::TemplateMissingFiles:
+            ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "You seem to be missing template files."));
+            break;
+        case Error::TemplateWrongRevision:
+            ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Wrong template-save revision.", additional_info.c_str(), 1));
+            break;
+        case Error::TemplateNotEnoughPlayers:
+            ChangeMenu(std::make_shared<ErrorMenu>("\uE150", "Template is lacking:", std::string("Villager" + additional_info).c_str(), 1));
+            break;
+        }
     }
 
     void MainMenu::gotoNextMenu(u64 ns) {
@@ -497,36 +501,29 @@ namespace dbk {
         //[[[[main+4BAEF28]+10]+130]+10]
         u64 mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
         
-        Check chkres = CheckTemplateFiles(std::string(LUNA_TEMPLATE_DIR), mainAddr);
-        if (chkres.check_result != CheckResult::Success) {
-            if (chkres.check_result == CheckResult::NoTemplate) ErrorNoTemplate();
-            if (chkres.check_result == CheckResult::MissingFiles) ErrorMissingFiles();
-            if (chkres.check_result == CheckResult::WrongRevision) ErrorWrongRevision(chkres.additional_info);
-            if (chkres.check_result == CheckResult::NotEnoughPlayers) ErrorNotEnoughPlayers(chkres.additional_info);
-            return;
-        }
-       
-        if (tid == 0) {
-            ErrorOpenACNH(&tid);
-            return;
-        }
 
+        TemplateCheck templatecheck;
+        TemplateCheckResult templatecheckresult = templatecheck.CheckTemplateFiles(std::string(LUNA_TEMPLATE_DIR), mainAddr);
+        if (templatecheckresult.error != Error::Success) {
+            showErrorMenu(templatecheckresult.error, templatecheckresult.additional_info);
+            return;
+        }
 
         bool isACNH = (tid == TID);
 
         if (!isACNH) {
-            ErrorOpenACNH(&tid);
+            showErrorMenu(Error::GameNotRunning);
             return;
         }
 
         if (!isSupportedVersion) {
-            ErrorWrongBID(&bid);
+            showErrorMenu(Error::GameWrongRevision);
             return;
         }
 
         if (mainAddr == 0x00) {
             util::PrintToNXLink("Error: mainAddr\n");
-            ErrorSimpCheck();
+            showErrorMenu(Error::GameNoIsland);
             return;
         }
 
@@ -535,7 +532,7 @@ namespace dbk {
 
         if (dreamstrval == 0x0 /*|| IsDreamingBed == 0x0*/) {
             util::PrintToNXLink("Error: NoDream");
-            ErrorSimpCheck();
+            showErrorMenu(Error::GameNoIsland);
             return;
         }
 
