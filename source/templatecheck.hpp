@@ -36,8 +36,6 @@ private:
 
     FsFileSystem fsSdmc;
 
-    u8 maskeditemscount = 0;
-
     void checkPlayers(u64 mainAddr) {
         if (mainAddr != 0x00) {
             static std::string playernumbers = "";
@@ -69,6 +67,8 @@ public:
         if (!issubdir) {
             checkPlayers(mainAddr);
         }
+
+        u8 maskeditemscount = 0;
 
         FsFile check;
         u64 bytesread = 0;
@@ -129,7 +129,7 @@ public:
                     u8 playernumber = std::stoi(tobechecked.substr(slPos - 1, 1));
                     if (util::getFilename(tobechecked) == "personal.dat") {
                         personalfound[playernumber] = true;
-                        //util::PrintToNXLink("Villager%d found\n", playernumber);
+                        util::PrintToNXLink("Template Villager%d found\n", playernumber);
                     }
                 }
             }
@@ -152,7 +152,7 @@ public:
         }
 
         if (((listcount - maskeditemscount) % 2) == 1) {
-            util::PrintToNXLink("missing headerfiles (uneven number of files)\n");
+            util::PrintToNXLink("missing headerfiles (uneven number of files)\nDirectory: " + path + "\n");
             result.error = Error::TemplateMissingFiles;
         }
 
