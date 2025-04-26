@@ -13,7 +13,7 @@ jobs:
        image: devkitpro/devkita64
     steps:
       - name: checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
             submodules: recursive
       - name: build application
@@ -28,7 +28,7 @@ jobs:
           touch config/luna/dump/.dumps
           touch config/luna/enctemplate/.template
       - name: Upload em artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: luna
           path: |
