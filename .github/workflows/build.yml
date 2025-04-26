@@ -34,3 +34,5 @@ jobs:
           path: |
             switch
             config
+          if-no-files-found: error
+          include-hidden-files: true
