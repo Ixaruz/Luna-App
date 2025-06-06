@@ -48,9 +48,8 @@ extern "C" {
         plExit();
         psmExit();
         pminfoExit();
-        //keep those services alive, bc other programs may be using them at the same time
-        //pmdmntExit();
-        //dmntchtExit();
+        pmdmntExit();
+        dmntchtExit();
         romfsExit();
         hidsysExit();
         clkrstExit();
