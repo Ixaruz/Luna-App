@@ -7,8 +7,6 @@
 #include <vector>
 #include <switch.h>
 #include <dirent.h>
-#include <minizip/zip.h>
-#include <minizip/unzip.h>
 
 #include "../../luna.h"
 

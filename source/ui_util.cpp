@@ -75,16 +75,6 @@ namespace dbk {
         float outr = w * (-0.125f * cos(ns / 1'000'000'000.0d) + 0.7f);
         nvgFillPaint(vg, nvgRadialGradient(vg, w / 2.0f, h + (h * 0.1f), 10, outr, nvgRGBA(248, 95, 240, 170), nvgRGBA(0, 0, 0, 0)));
         nvgFill(vg);
-
-        /*
-        float fontsize = 28.0f;
-        nvgFontSize(vg, fontsize);
-        nvgAddFallbackFont(vg, SwitchStandardFont, SwitchExtFont);
-        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
-        nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
-
-        nvgText(vg, w - 20.0f, h - 10.0f, (std::string("Luna ") + std::string(STRING_VERSION)).c_str(), nullptr);
-        */
     }
 
     void DrawWindow(NVGcontext *vg, const char *title, float x, float y, float w, float h) {

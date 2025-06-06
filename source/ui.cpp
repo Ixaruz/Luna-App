@@ -500,7 +500,7 @@ namespace dbk {
 
         //[[[[main+4BAEF28]+10]+130]+10]
         u64 mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
-        
+
 
         TemplateCheck templatecheck;
         TemplateCheckResult templatecheckresult = templatecheck.CheckTemplateFiles(std::string(LUNA_TEMPLATE_DIR), mainAddr);
@@ -585,7 +585,7 @@ namespace dbk {
     }
 
     void MainMenu::Draw(NVGcontext *vg, u64 ns) {
-        DrawWindow(vg, (std::string("Luna ") + std::string(STRING_VERSION)).c_str(), g_screen_width / 2.0f - WindowWidth / 2.0f, g_screen_height / 2.0f - WindowHeight / 2.0f, WindowWidth, WindowHeight);
+        DrawWindow(vg, (std::string(PROJECT_NAME " " PROJECT_VERSION)).c_str(), g_screen_width / 2.0f - WindowWidth / 2.0f, g_screen_height / 2.0f - WindowHeight / 2.0f, WindowWidth, WindowHeight);
         this->DrawButtons(vg, ns);
     }
 
@@ -606,7 +606,7 @@ namespace dbk {
     }
 
     void DumpingMenu::InterpretInput() {
-        
+
         if (g_touches_moving) {
             HidTouchScreenState current_touch;
             hidGetTouchScreenStates(&current_touch, 1);
@@ -723,7 +723,7 @@ namespace dbk {
     Result DumpingMenu::TransitionDumpState(u64 ns) {
         Result rc = 0;
         if (m_dumping_state == DumpState::NeedsSetup) {
-   
+
             //std::thread decrypt = std::thread([this]() {(Dump::Decryptshizfile(g_current_menu, &this->m_progress_percent)); });
             dump = std::thread([this]() { (Dump::Setup(g_dumping_menu, &this->m_progress_nextPercent, &this->m_enable_buttons, &this->m_dumping_state)); });
             m_dumping_state = DumpState::NeedsWait;
@@ -814,7 +814,7 @@ namespace dbk {
             }
         }
 
-        
+
         if (m_progress_percent != m_progress_nextPercent) {
             if (m_progress_percent < m_progress_nextPercent) {
                 m_progress_percent += ceil((m_progress_nextPercent - m_progress_percent) * 100) / 300;
@@ -950,6 +950,8 @@ namespace dbk {
         //fix endianess of hash
         bid = __builtin_bswap64(bid);
 
+        util::PrintToNXLink("BID: 0x%016lX\n", bid);
+
         isSupportedVersion = util::findVersionIndex(bid);
 
         //[[[[main+4BAEF28]+10]+140]+08]
@@ -958,7 +960,7 @@ namespace dbk {
         /* Change the current menu to the main menu and if there is an island name representable, put it on the dump button. */
         g_current_menu = std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str());
         //ChangeMenu(std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str()));
-        
+
         return true;
     }
 

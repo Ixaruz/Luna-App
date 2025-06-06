@@ -1,6 +1,6 @@
 [submodule "libs/LibACNH"]
 	path = libs/LibACNH
 	url = https://github.com/Slattz/LibACNH.git
-[submodule "nanovg"]
-	path = nanovg
-	url = https://github.com/Adubbz/nanovg-deko3d.git
+[submodule "libs/nanovg-deko3d"]
+	path = libs/nanovg-deko3d
+	url = https://github.com/Adubbz/nanovg-deko3d

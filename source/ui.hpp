@@ -24,6 +24,7 @@
 #include <switch.h>
 #include "ui_util.hpp"
 #include "util.h"
+#include "version.h"
 
 namespace dbk {
 
