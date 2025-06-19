@@ -80,6 +80,7 @@ extern const std::vector<u64> BID = {
 	0x747A5B4CBC530AED, //2.0.5
 	0x15765149DF53BA41, //2.0.6
 	0x0948E48778171EE6, //2.0.7
+	0xCBF780093C874152, //2.0.8
 };
 
 extern const std::vector<u64> VersionPointerOffset = {
@@ -91,6 +92,7 @@ extern const std::vector<u64> VersionPointerOffset = {
 	0x4C1AD20, //2.0.5
 	0x4C1AD20, //2.0.6
 	0x4C1AD20, //2.0.7
+	0x4C1AD20, //2.0.8
 };
 
 extern const u32 REV_200_MAIN_SIZE = 0x8F1BB0;
@@ -125,12 +127,11 @@ extern const std::vector<FileHashRegion*> REV_200_PERSONAL = std::vector<FileHas
 
 extern int versionindex = 0;
 
-static const char verboten[] = { ',', '/', '\\', '<', '>', ':', '"', '|', '?', '*', '™', '©', '®' };
-
+static const char verboten[] = { ',', '/', '\\', '<', '>', ':', '"', '|', '?', '*', '\'', '!', '@', '#' };
 
 static bool isVerboten(const u16& t)
 {
-	for (unsigned i = 0; i < 13; i++)
+	for (unsigned i = 0; i < 14; i++)
 	{
 		if (t == verboten[i])
 			return true;
