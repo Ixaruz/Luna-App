@@ -1,0 +1,28 @@
+stages:
+  - build
+
+variables:
+  BUILD_VERSION: "0.0.0"
+  GIT_CLONE_STRATEGY: recursive
+  GIT_SUBMODULE_STRATEGY: recursive
+build:
+  tags:
+    - docker
+  stage: build
+  image: devkitpro/devkita64
+  script:
+    - catnip -t Switch -D BUILD_VERSION=${BUILD_VERSION}
+    - mkdir -p switch
+    - mkdir -p config/luna/dump
+    - mkdir -p config/luna/enctemplate
+    - mv build/main.release/*.nro switch
+    - touch config/luna/dump/.dumps
+    - touch config/luna/enctemplate/.template
+  artifacts:
+    paths:
+      - switch/*.nro
+      - config/luna/dump/.dumps
+      - config/luna/enctemplate/.template
+  only:
+    - main
+  when: manual
