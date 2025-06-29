@@ -31,6 +31,9 @@ namespace Dump {
 		u64 g_playerAddr = 0;
 		bool g_players[0x8] = { false };
 		u8* g_AccountTableBuffer = nullptr;
+
+		u8** g_playerNetProfile = nullptr;
+		u8** g_playerProfileIds = nullptr;
 		size_t g_bufferSize = BUFF_SIZE;
 		u8* g_buffer = nullptr;
 
@@ -115,6 +118,28 @@ namespace Dump {
 		fsFileClose(&md);
 	}
 
+	void getPlayerProfileInfo() {
+
+		FsFile pd;
+		u64 bytesread;
+		static char path[FS_MAX_PATH] = { 0 };
+
+		g_playerNetProfile = new u8*[8];
+		g_playerProfileIds = new u8*[8];
+		for (u8 i = 0; i < 8; i++) {
+			// we're past the template check so i should just be able to open these files...
+			if (g_players[i]) {
+				std::snprintf(path, FS_MAX_PATH, (g_pathOut + "Villager%d/personal.dat").c_str(), i);
+				fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Read, &pd);
+				g_playerNetProfile[i] = new u8[playerNetProfileSize];
+				g_playerProfileIds[i] = new u8[playerProfileIdsSize];
+				fsFileRead(&pd, SaveHeaderSize + playerNetProfileOffset, g_playerNetProfile[i], playerNetProfileSize, FsReadOption_None, &bytesread);
+				fsFileRead(&pd, SaveHeaderSize + playerProfileReportInfoOffset, g_playerProfileIds[i], playerProfileIdsSize, FsReadOption_None, &bytesread);
+				fsFileClose(&pd);
+			}
+		}
+	}
+
 	void DecryptPair(const std::string &dataPathIn, const std::string &dataPathOut) {
 		FsFile hd;
 		FsFile md;
@@ -157,7 +182,7 @@ namespace Dump {
 		memset(path, 0, FS_MAX_PATH);
 		std::snprintf(path, FS_MAX_PATH, dataPathOut.c_str());
 		if (access(path, F_OK) != -1) {
-			fsFsDeleteFile(&g_fsSdmc, path);	
+			fsFsDeleteFile(&g_fsSdmc, path);
 		}
 		fsFsCreateFile(&g_fsSdmc, path, datasize, 0);
 		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Write, &newmd);
@@ -198,7 +223,7 @@ namespace Dump {
 		memset(path, 0, FS_MAX_PATH);
 		std::snprintf(path, FS_MAX_PATH, dataPathOut.c_str());
 		if (access(path, F_OK) != -1) {
-			fsFsDeleteFile(&g_fsSdmc, path);	
+			fsFsDeleteFile(&g_fsSdmc, path);
 		}
 		fsFsCreateFile(&g_fsSdmc, path, datasize, 0);
 		fsFsOpenFile(&g_fsSdmc, path, FsOpenMode_Write, &newmd);
@@ -219,7 +244,7 @@ namespace Dump {
 	}
 
 	void Hash(const std::string& dataPathIn) {
-		
+
 		size_t slPos = dataPathIn.find_last_of('/');
 		std::string fileName = dataPathIn.substr(slPos + 1, std::string::npos);
 
@@ -238,7 +263,7 @@ namespace Dump {
 		u64 bytesread = 0;
 
 		fsFileRead(&md, 0, Data, datasize, FsReadOption_None, &bytesread);
-		
+
 		if (fileName == "main.dat") {
 			for (auto &h : REV_200_MAIN) {
 				MurmurHash3::Update(Data, h->HashOffset, h->getBeginOffset(), h->Size);
@@ -383,7 +408,7 @@ namespace Dump {
 			return;
 #endif
 		}
-	
+
 #if !DEBUG_UI
 		checkPlayers();
 		freePathFilters();
@@ -407,7 +432,7 @@ namespace Dump {
 		else g_dumping_menu->LogAddLine("DA-" + util::getDreamAddrString(g_mainAddr));
 		g_pathOut += std::string(dreamtime) + "/";
 		util::PrintToNXLink((g_pathOut + "\n").c_str());
-		//idk why, but fsFsCreateDirectory REALLY doesn't like the date_format directory name, no matter how i formatted it. so i resort to mkdir, 
+		//idk why, but fsFsCreateDirectory REALLY doesn't like the date_format directory name, no matter how i formatted it. so i resort to mkdir,
 		//even though it's kinda nasty to use 2 file system implementations at once
 		mkdir(g_pathOut.c_str(), 0777);
 		//rc = fsFsCreateDirectory(&g_fsSdmc, g_pathOut.c_str());
@@ -441,6 +466,8 @@ namespace Dump {
 	void RWData() {
 		getAccountTable();
 
+		getPlayerProfileInfo();
+
 		static char pathbuffer[FS_MAX_PATH] = { 0 };
 		g_buffer = new u8[BUFF_SIZE];
 
@@ -449,7 +476,7 @@ namespace Dump {
 
 		std::snprintf(pathbuffer, FS_MAX_PATH, (g_pathOut + "main.dat").c_str());
 		fsFsOpenFile(&g_fsSdmc, pathbuffer, FsOpenMode_Write, &md);
-		
+
 		//reset size in-case it got changed in the latter for loop
 		g_bufferSize = BUFF_SIZE;
 		float progress = g_progress_percent_last_function;
@@ -508,10 +535,10 @@ namespace Dump {
 
 				dmntchtReadCheatProcessMemory(g_playerAddr + offset + (i * playersOffset), g_buffer, g_bufferSize);
 				fsFileWrite(&pd, SaveHeaderSize + offset, g_buffer, g_bufferSize, FsWriteOption_Flush);
-			}	
+			}
 			g_dumping_menu->LogEditLastElement("Copying player " + std::to_string(i + 1) + ": successful");
 			fsFileClose(&pd);
-			util::PrintToNXLink("wrote personal.dat\n");	
+			util::PrintToNXLink("wrote personal.dat\n");
 			addProgress(0.10f / getPlayerNumber());
 		}
 		setProgress(progress + 0.10f);
@@ -707,13 +734,13 @@ namespace Dump {
 			};
 
 			storageSize = storageSizes[houselvl + RcoStorageExpansion_v200_AddLevel];
-			
+
 			/*
 			util::PrintToNXLink("Houselevel player %d: %d\n", i, houselvl);
 			util::PrintToNXLink("Storage expansion 2.0.0: %d\n", RcoStorageExpansion_v200_AddLevel);
 			util::PrintToNXLink("resulting storage size: %d\n", storageSize);
 			*/
-			
+
 			u16 Update200Flags[] = {
 				MainmenuRecipe_v2,						//Be a Chef! DIY Recipes+
 				MainmenuMydesignPatternPlus,			//Custom Designs Patterns+
@@ -834,10 +861,10 @@ namespace Dump {
 			g_dumping_menu->LogAddLine("HairStyles: " + std::to_string((HairStyles[0] >> 1) & 7));
 			g_dumping_menu->LogAddLine("AddHairStyle4: " + std::to_string(AddHairStyle4));
 			g_dumping_menu->LogAddLine("StylishHairStyles: " + std::to_string((StylishHairStyles[0] >> 6) & 1));
-			
+
 			g_dumping_menu->LogAddLine("ItemRingEnable: " + std::to_string(ItemRingEnable));
 			g_dumping_menu->LogAddLine("Tool Ring: It's Essential!: " + std::to_string(ToolRingItsEssential[0] & 1));
-			
+
 
 			g_dumping_menu->LogAddLine("GetLicenseGrdStone: " + std::to_string(GetLicenses[0]));
 			g_dumping_menu->LogAddLine("GetLicenseGrdBrick: " + std::to_string(GetLicenses[1]));
@@ -891,6 +918,10 @@ namespace Dump {
 			fsFileWrite(&pd, SaveHeaderSize + playerSize + ItemCollectBitOffset + (0x39ED / 8), Top4FabHairstyles, sizeof(u8), FsWriteOption_Flush);
 
 			fsFileWrite(&pd, SaveHeaderSize + playerSize + RecipesOffset, g_RecipeBook, g_RecipeBookSize, FsWriteOption_Flush);
+
+			//Restore NetProfile and ProfileMain (Ids) from the template
+			fsFileWrite(&pd, SaveHeaderSize + playerNetProfileOffset, g_playerNetProfile[i], playerNetProfileSize, FsWriteOption_Flush);
+			fsFileWrite(&pd, SaveHeaderSize + playerProfileReportInfoOffset, g_playerProfileIds[i], playerProfileIdsSize, FsWriteOption_Flush);
 
 			fsFileWrite(&pd, StorageSizeOffset, &storageSize, sizeof(u32), FsWriteOption_Flush);
 			fsFileWrite(&pd, Pocket1SizeOffset, &pocket1Size, sizeof(u32), FsWriteOption_Flush);

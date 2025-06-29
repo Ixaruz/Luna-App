@@ -32,6 +32,12 @@ extern const u64 DreamInfoSize;
 extern const u64 playerSize;
 extern const u64 playersOffset;
 
+extern const u64 playerNetProfileSize;
+extern const u64 playerNetProfileOffset;
+
+extern const u64 playerProfileIdsSize;
+extern const u64 playerProfileReportInfoOffset;
+
 //taken from NHSE
 extern const u64 PersonalID;
 extern const u64 EventFlagsPlayerOffset;
@@ -132,7 +138,7 @@ namespace util
     void overclockSystem(bool enable);
 
     void PrintToNXLink(const char *format, ...);
-    
+
     void PrintToNXLink(std::string message);
 
     void PrintResultToNXLink(Result rc);

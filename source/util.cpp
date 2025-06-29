@@ -13,9 +13,15 @@ extern const u64 DreamInfoSize = 0x50;
 extern const u64 playerSize = 0x36A50 - SaveHeaderSize; //changed in 1.10.0 // GSaveLandOther - Header
 extern const u64 playersOffset = 0x7B658; //changed in 1.9.0 //alternatively in the player pointer [[[[main+XXXXXX]+10]+140]+08] you can add 0x8 to 0x140 for each additional player
 
+extern const u64 playerNetProfileSize = 0x10;
+extern const u64 playerNetProfileOffset = 0x123A0 - SaveHeaderSize;
+
+extern const u64 playerProfileIdsSize = 0x3F8; // ProfileMain size + ProfileMain offset - ProfileReportInfo offset (i.e. size of ProfileMain afterr ProfileReportInfo)
+extern const u64 playerProfileReportInfoOffset = 0x35488 - SaveHeaderSize;
+
 //taken from NHSE
 //*personal.dat*//
-extern const u64 PersonalID = 0xAFA8; 
+extern const u64 PersonalID = 0xAFA8;
 extern const u64 EventFlagsPlayerOffset = 0xAFE0;
 extern const u64 ItemCollectBitOffset = 0xA058;
 extern const u64 ItemRemakeCollectBitOffset = 0xA7AC;
