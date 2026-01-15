@@ -2,39 +2,39 @@
 
 extern const s64 SaveHeaderSize = 0x110;
 
-extern const u64 mainSize = 0x547520 - SaveHeaderSize; //changed in 2.0.0 // GSaveLandOther - Header
+extern const u64 mainSize = 0x5b3c40;
 extern const u64 GSavePlayerVillagerAccountOffset = 0x1E34C0 - SaveHeaderSize; //changed in 2.0.0
 extern const u64 GSavePlayerVillagerAccountSize = 0x48;
 extern const u64 GAccountTableOffset = 0x10;
-extern const u64 DreamIDOffset = 0x545F50; //changed in 2.0.0
+extern const u64 DreamIDOffset = 0x578438; //changed in 3.0.0
 extern const u64 DreamInfoSize = 0x50;
 
 
-extern const u64 playerSize = 0x36A50 - SaveHeaderSize; //changed in 1.10.0 // GSaveLandOther - Header
+extern const u64 playerSize = 0x37BE0 - SaveHeaderSize; //changed in 3.0.0 // GSaveLandOther - Header
 extern const u64 playersOffset = 0x7B658; //changed in 1.9.0 //alternatively in the player pointer [[[[main+XXXXXX]+10]+140]+08] you can add 0x8 to 0x140 for each additional player
 
 extern const u64 playerNetProfileSize = 0x10;
-extern const u64 playerNetProfileOffset = 0x123A0 - SaveHeaderSize;
+extern const u64 playerNetProfileOffset = 0x13530 - SaveHeaderSize;
 
 extern const u64 playerProfileIdsSize = 0x3F8; // ProfileMain size + ProfileMain offset - ProfileReportInfo offset (i.e. size of ProfileMain afterr ProfileReportInfo)
-extern const u64 playerProfileReportInfoOffset = 0x35488 - SaveHeaderSize;
+extern const u64 playerProfileReportInfoOffset = 0x36618 - SaveHeaderSize;
 
 //taken from NHSE
 //*personal.dat*//
-extern const u64 PersonalID = 0xAFA8;
-extern const u64 EventFlagsPlayerOffset = 0xAFE0;
-extern const u64 ItemCollectBitOffset = 0xA058;
-extern const u64 ItemRemakeCollectBitOffset = 0xA7AC;
-extern const u64 RecipesOffset = 0x24afc + 0x10; //Bank + 0x10
-extern const u64 StorageSizeOffset = playerSize + SaveHeaderSize + 0x18C + (8 * 5000); //absolute file offset //changed in 1.7.0 0x4081C
+extern const u64 PersonalID = 0xc138;
+extern const u64 EventFlagsPlayerOffset = 0xc170;
+extern const u64 ItemCollectBitOffset = 0x11d58;
+extern const u64 ItemRemakeCollectBitOffset = 0x124ac;
+extern const u64 RecipesOffset = 0x2d69c + 0x10; //Bank + 0x10
+extern const u64 StorageSizeOffset = playerSize + SaveHeaderSize + 0x18C + (8 * 9000); //absolute file offset //changed in 3.0.0
 extern const u64 Pocket1SizeOffset = playerSize + SaveHeaderSize + 0x10 + (8 * 20); //absolute file offset //changed in 1.7.0 0x36B00
 extern const u64 ExpandBaggageOffset = 0x36BD8;
 
 //*main.dat*//
 extern const u64 houseSize = 0x28A28; //changed in 2.0.0
 extern const u64 EventFlagOffset = 0x22ebf0; //changed in 2.0.0 //EventFlagLand
-extern const u64 houseLvlOffset = 0x30a6bc; //changed in 2.0.0 //PlayerHouseList
-extern const u64 SaveFgOffset = 0x462278; //changed in 2.0.0 //SaveFg
+extern const u64 houseLvlOffset = 0x33CAD0; //changed in 3.0.0 //PlayerHouseList
+extern const u64 SaveFgOffset = 0x494760; //changed in 3.0.0 //SaveFg
 extern const u64 SpecialityFruitOffset = 0x900; //SpecialityFruit
 
 
@@ -87,6 +87,7 @@ extern const std::vector<u64> BID = {
 	0x15765149DF53BA41, //2.0.6
 	0x0948E48778171EE6, //2.0.7
 	0xCBF780093C874152, //2.0.8
+	0x5D913CF71EB24CB2, //3.0.0
 };
 
 extern const std::vector<u64> VersionPointerOffset = {
@@ -99,6 +100,7 @@ extern const std::vector<u64> VersionPointerOffset = {
 	0x4C1AD20, //2.0.6
 	0x4C1AD20, //2.0.7
 	0x4C1AD20, //2.0.8
+	0x5473020, //3.0.0
 };
 
 extern const u32 REV_200_MAIN_SIZE = 0x8F1BB0;
