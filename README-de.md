@@ -6,7 +6,7 @@ Luna
 
 ![Banner](bannerslim.png?raw=true)
 =====
-[![2.0.0](https://img.shields.io/badge/Version-2.0.0-20306a)](#) [![2.0.1](https://img.shields.io/badge/Version-2.0.1-20306a)](#) [![2.0.2](https://img.shields.io/badge/Version-2.0.2-20306a)](#) [![2.0.3](https://img.shields.io/badge/Version-2.0.3-20306a)](#) [![2.0.4](https://img.shields.io/badge/Version-2.0.4-20306a)](#) [![2.0.5](https://img.shields.io/badge/Version-2.0.5-20306a)](#) [![2.0.6](https://img.shields.io/badge/Version-2.0.6-20306a)](#) [![2.0.7](https://img.shields.io/badge/Version-2.0.7-20306a)](#) [![2.0.8](https://img.shields.io/badge/Version-2.0.8-20306a)](#)
+[![3.0.0](https://img.shields.io/badge/Version-3.0.0-20306a)](#)
 
 Luna ist eine Homebrew-App, designiert zum Kopieren von Animal Crossing: New Horizons Inseln.
 
