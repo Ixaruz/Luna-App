@@ -265,13 +265,13 @@ namespace Dump {
 		fsFileRead(&md, 0, Data, datasize, FsReadOption_None, &bytesread);
 
 		if (fileName == "main.dat") {
-			for (auto &h : REV_200_MAIN) {
+			for (auto &h : REV_300_MAIN) {
 				MurmurHash3::Update(Data, h->HashOffset, h->getBeginOffset(), h->Size);
 			}
 		}
 
 		if (fileName == "personal.dat") {
-			for (auto &h : REV_200_PERSONAL) {
+			for (auto &h : REV_300_PERSONAL) {
 				MurmurHash3::Update(Data, h->HashOffset, h->getBeginOffset(), h->Size);
 			}
 		}

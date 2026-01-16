@@ -11,7 +11,7 @@ extern const u64 DreamInfoSize = 0x50;
 
 
 extern const u64 playerSize = 0x37BE0 - SaveHeaderSize; //changed in 3.0.0 // GSaveLandOther - Header
-extern const u64 playersOffset = 0x7B658; //changed in 1.9.0 //alternatively in the player pointer [[[[main+XXXXXX]+10]+140]+08] you can add 0x8 to 0x140 for each additional player
+extern const u64 playersOffset = 0x7E3B0; //changed in 3.0.0 //alternatively in the player pointer [[[[main+XXXXXX]+10]+140]+08] you can add 0x8 to 0x140 for each additional player
 
 extern const u64 playerNetProfileSize = 0x10;
 extern const u64 playerNetProfileOffset = 0x13530 - SaveHeaderSize;
@@ -75,62 +75,39 @@ const std::map<u16, u16> TownfruitSmoothiesMap = {
 	{2287, 0x384}, //cherry smoothie
 };
 
-/*2.0.X specific stuff*/
-
 extern const std::vector<u64> BID = {
-	0xE4BBD879D326A0AD, //2.0.0
-	0x8C81A85AA4C1990B, //2.0.1
-	0xE5759E5B7E31411B, //2.0.2
-	0x205F55C725C16C6F, //2.0.3
-	0x372C5EA461D03A7D, //2.0.4
-	0x747A5B4CBC530AED, //2.0.5
-	0x15765149DF53BA41, //2.0.6
-	0x0948E48778171EE6, //2.0.7
-	0xCBF780093C874152, //2.0.8
 	0x5D913CF71EB24CB2, //3.0.0
 };
 
 extern const std::vector<u64> VersionPointerOffset = {
-	0x4BAEF28, //2.0.0
-	0x4BAEF28, //2.0.1
-	0x4BAEF28, //2.0.2
-	0x4BAEF28, //2.0.3
-	0x4C1AD20, //2.0.4
-	0x4C1AD20, //2.0.5
-	0x4C1AD20, //2.0.6
-	0x4C1AD20, //2.0.7
-	0x4C1AD20, //2.0.8
 	0x5473020, //3.0.0
 };
 
-extern const u32 REV_200_MAIN_SIZE = 0x8F1BB0;
-extern const u32 REV_200_PERSONAL_SIZE = 0x6A520;
-
-extern const std::vector<FileHashRegion*> REV_200_MAIN = std::vector<FileHashRegion*> {
-		new FileHashRegion(0x000110, 0x1e339c),
-		new FileHashRegion(0x1e34b0, 0x36406c),
-		new FileHashRegion(0x547630, 0x03693c),
-		new FileHashRegion(0x57df70, 0x033acc),
-		new FileHashRegion(0x5b1b50, 0x03693c),
-		new FileHashRegion(0x5e8490, 0x033acc),
-		new FileHashRegion(0x61c070, 0x03693c),
-		new FileHashRegion(0x6529b0, 0x033acc),
-		new FileHashRegion(0x686590, 0x03693c),
-		new FileHashRegion(0x6bced0, 0x033acc),
-		new FileHashRegion(0x6f0ab0, 0x03693c),
-		new FileHashRegion(0x7273f0, 0x033acc),
-		new FileHashRegion(0x75afd0, 0x03693c),
-		new FileHashRegion(0x791910, 0x033acc),
-		new FileHashRegion(0x7c54f0, 0x03693c),
-		new FileHashRegion(0x7fbe30, 0x033acc),
-		new FileHashRegion(0x82fa10, 0x03693c),
-		new FileHashRegion(0x866350, 0x033acc),
-		new FileHashRegion(0x899e20, 0x057d8c),
+extern const std::vector<FileHashRegion*> REV_300_MAIN = std::vector<FileHashRegion*> {
+        new FileHashRegion(0x000110, 0x1e339c),
+        new FileHashRegion(0x1e34b0, 0x3d089c),
+        new FileHashRegion(0x5b3e60, 0x037acc),
+        new FileHashRegion(0x5eb930, 0x03ce5c),
+        new FileHashRegion(0x6288a0, 0x037acc),
+        new FileHashRegion(0x660370, 0x03ce5c),
+        new FileHashRegion(0x69d2e0, 0x037acc),
+        new FileHashRegion(0x6d4db0, 0x03ce5c),
+        new FileHashRegion(0x711d20, 0x037acc),
+        new FileHashRegion(0x7497f0, 0x03ce5c),
+        new FileHashRegion(0x786760, 0x037acc),
+        new FileHashRegion(0x7be230, 0x03ce5c),
+        new FileHashRegion(0x7fb1a0, 0x037acc),
+        new FileHashRegion(0x832c70, 0x03ce5c),
+        new FileHashRegion(0x86fbe0, 0x037acc),
+        new FileHashRegion(0x8a76b0, 0x03ce5c),
+        new FileHashRegion(0x8e4620, 0x037acc),
+        new FileHashRegion(0x91c0f0, 0x03ce5c),
+        new FileHashRegion(0x958f50, 0x057f3c),
 };
 
-extern const std::vector<FileHashRegion*> REV_200_PERSONAL = std::vector<FileHashRegion*> {
-		new FileHashRegion(0x00110, 0x3693c),
-		new FileHashRegion(0x36a50, 0x33acc),
+extern const std::vector<FileHashRegion*> REV_300_PERSONAL = std::vector<FileHashRegion*> {
+		new FileHashRegion(0x00110, 0x37acc),
+		new FileHashRegion(0x37be0, 0x3ce5c),
 };
 
 extern int versionindex = 0;

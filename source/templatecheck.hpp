@@ -19,15 +19,7 @@ struct TemplateCheckResult {
 
 //define all valid save RevisionInfo here
 const std::vector<FileHeaderInfo*> RevisionInfo = std::vector<FileHeaderInfo*>{
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 22}, // 2.0.0
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 23}, // 2.0.1
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 24}, // 2.0.2
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 25}, // 2.0.3
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 26}, // 2.0.4
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 27}, // 2.0.5
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 28}, // 2.0.6
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 29}, // 2.0.7
-    new FileHeaderInfo { /*Major*/ 0x80009, /*Minor*/ 0x80085, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 30}, // 2.0.8
+    new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 31}, // 3.0.0
 };
 
 class TemplateCheck {

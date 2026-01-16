@@ -54,9 +54,6 @@ extern const u64 EventFlagOffset;
 extern const u64 SaveFgOffset;
 extern const u64 SpecialityFruitOffset;
 
-extern const u32 REV_200_MAIN_SIZE;
-extern const u32 REV_200_PERSONAL_SIZE;
-
 extern const std::vector<u16> MainmenuRecipes;
 
 extern const std::vector<u16> PrettyGoodToolsRecipesRecipes;
@@ -81,8 +78,8 @@ public:
     {}
 };
 
-extern const std::vector<FileHashRegion*> REV_200_MAIN;
-extern const std::vector<FileHashRegion*> REV_200_PERSONAL;
+extern const std::vector<FileHashRegion*> REV_300_MAIN;
+extern const std::vector<FileHashRegion*> REV_300_PERSONAL;
 
 struct IslandName {
     u16 name[0xB];
