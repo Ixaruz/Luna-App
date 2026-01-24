@@ -5,7 +5,9 @@ Luna
   <span>English</span> / <a href="https://github.com/Ixaruz/Luna-App/blob/main/README-de.md">German (Deutsch)</a>
 </div>
 
-[![3.0.0](https://img.shields.io/badge/Version-3.0.0-20306a)](#) 
+![Banner](bannerslim.png?raw=true)
+=====
+[![3.0.0](https://img.shields.io/badge/Version-3.0.0-20306a)](#)
 
 Luna is a homebrew app designed to dump Animal Crossing: New Horizons islands you visit.
 
