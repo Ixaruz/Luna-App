@@ -30,7 +30,7 @@ Luna is a homebrew app designed to dump Animal Crossing: New Horizons islands yo
 [![Actions Status](https://github.com/Ixaruz/Luna-App/workflows/Build/badge.svg)](https://github.com/Ixaruz/Luna-App/actions)
 
 Head to the [release page](https://github.com/Ixaruz/Luna-App/releases/) and download the latest released luna.zip and extract it onto your Switch's SD card.
-Luna requires a save-file-template to work. either use your own save file`<sup>`[1]`</sup>` or use the included [enctemplate.zip](https://github.com/Ixaruz/Luna-App/raw/main/enctemplate.zip) and unzip it in   `SD:/config/luna/enctemplate`.
+Luna requires a save-file-template to work. either use your own save file<sup>[1]</sup> or use the included [enctemplate.zip](https://github.com/Ixaruz/Luna-App/raw/main/enctemplate.zip) and unzip it in   `SD:/config/luna/enctemplate`.
 
 <br>
 <sup>[1]</sup><smaller>under the requirement, that it has the same amount of players (or more) as the island you are trying to dump.
