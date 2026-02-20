@@ -62,7 +62,7 @@ extern const std::vector<u16> BeAChefRecipes;
 
 extern const std::map<u16, u16> TownfruitSmoothiesMap;
 
-extern const std::vector<u64> BID;
+extern const std::vector<std::string> knownSupportedVersions;
 
 extern const std::vector<u64> VersionPointerOffset;
 
@@ -101,7 +101,7 @@ enum class Error {
 namespace util
 {
     //returns true if version is valid
-    bool findVersionIndex(u64 versionBID);
+    bool isVersionSupported(std::string const &versionString);
 
     std::string getIslandNameASCII(u64 playerAddr);
 

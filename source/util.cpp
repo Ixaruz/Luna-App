@@ -75,9 +75,9 @@ const std::map<u16, u16> TownfruitSmoothiesMap = {
 	{2287, 0x384}, //cherry smoothie
 };
 
-extern const std::vector<u64> BID = {
-	0x5D913CF71EB24CB2, //3.0.0
-	0x8F2CB7A9774959C8, //3.0.1
+extern const std::vector<std::string> knownSupportedVersions = {
+	"3.0.0",
+	"3.0.1",
 };
 
 extern const std::vector<u64> VersionPointerOffset = {
@@ -336,12 +336,12 @@ static bool isKATAKANA(const u16& t) {
 }
 
 namespace util {
-	bool findVersionIndex(u64 versionBID) {
-		auto p = std::find(BID.begin(), BID.end(), versionBID);
-		if (p == BID.end()) return false;
+	bool isVersionSupported(std::string const &versionString) {
+		auto p = std::find(knownSupportedVersions.begin(), knownSupportedVersions.end(), versionString);
+		if (p == knownSupportedVersions.end()) return false;
 		else {
-			versionindex = std::distance(BID.begin(), p);
-			util::PrintToNXLink("current version: 2.0.%d\n", versionindex);
+			versionindex = std::distance(knownSupportedVersions.begin(), p);
+			util::PrintToNXLink("current version: %s\n", versionString.c_str());
 			return true;
 		}
 	}

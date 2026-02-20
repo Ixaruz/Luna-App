@@ -50,8 +50,9 @@ namespace dbk {
         u32 g_screen_width;
         u32 g_screen_height;
 
-        static u64 tid = 0, bid = 0, pid = 0;
-        static bool isSupportedVersion = false;
+        static u64 tid = 0, pid = 0;
+        NsApplicationControlData control_data;
+        static bool isVersionSupported = false;
 
         static u64 g_last_ns = 0;
         static u64 g_frame_counter = 0;
@@ -466,9 +467,13 @@ namespace dbk {
 
         case Error::GameWrongRevision:
             {
-                const char* ret = "ACNH version unknown! If you think this is an error,";
-                const char* formatter = "please report this BID: 0x%016lX";
-                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, bid));
+                const char *ret = "ACNH version unsupported!";
+                const char *prefix = "Detected version: ";
+                const size_t info_size = sizeof(prefix) + sizeof(control_data.nacp.display_version);
+                char info[info_size] = {0};
+                snprintf(info, info_size, "%s%s", prefix, control_data.nacp.display_version);
+
+                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, info, 1));
             break;
             }
 
@@ -514,7 +519,7 @@ namespace dbk {
             return;
         }
 
-        if (!isSupportedVersion) {
+        if (!isVersionSupported) {
             showErrorMenu(Error::GameWrongRevision);
             return;
         }
@@ -941,22 +946,25 @@ namespace dbk {
         pmdmntGetApplicationProcessId(&pid);
         pminfoGetProgramId(&tid, pid);
 
+        memset(&control_data, 0, sizeof(control_data));
 
-        DmntCheatProcessMetadata metadata;
-        dmntchtGetCheatProcessMetadata(&metadata);
-        memcpy(&bid, metadata.main_nso_build_id, 0x8);
-        //fix endianess of hash
-        bid = __builtin_bswap64(bid);
+        std::string islandDisplayName = "";
 
-        util::PrintToNXLink("BID: 0x%016lX\n", bid);
+        if (tid == TID) {
+            Result rc = nsGetApplicationControlData(NsApplicationControlSource_StorageOnly, tid, &control_data, sizeof(control_data), nullptr);
+            if (R_SUCCEEDED(rc)) {
+                isVersionSupported = util::isVersionSupported(control_data.nacp.display_version);
+                if(isVersionSupported) {
+                    //[[[[main+4BAEF28]+10]+140]+08]
+                    u64 playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
+                    islandDisplayName = util::getIslandNameASCII(playerAddr);
+                }
+            }
+        }
 
-        isSupportedVersion = util::findVersionIndex(bid);
-
-        //[[[[main+4BAEF28]+10]+140]+08]
-        u64 playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
 
         /* Change the current menu to the main menu and if there is an island name representable, put it on the dump button. */
-        g_current_menu = std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str());
+        g_current_menu = std::make_shared<MainMenu>(islandDisplayName.c_str());
         //ChangeMenu(std::make_shared<MainMenu>(util::getIslandNameASCII(playerAddr).c_str()));
 
         return true;
