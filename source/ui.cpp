@@ -354,16 +354,17 @@ namespace dbk {
 
     void AlertMenu::Draw(NVGcontext *vg, u64 ns) {
         const float window_height = WindowHeight + (R_FAILED(m_rc) ? SubTextHeight : 0.0f);
-        const float x = g_screen_width / 2.0f - WindowWidth / 2.0f;
+        const float window_width = std::max(WindowWidth, std::max(strlen(m_result_text), strlen(m_subtext)) * 12.0f + HorizontalInset * 2.f);
+        const float x = g_screen_width / 2.0f - window_width / 2.0f;
         const float y = g_screen_height / 2.0f - window_height / 2.0f;
 
-        if (strlen(m_text) > 5) DrawWindow(vg, m_text, x, y, WindowWidth, window_height);
-        else DrawAlertWindow(vg, m_text, x, y, WindowWidth, window_height);
-        DrawHeadline(vg, x + HorizontalInset, y + TitleGap, WindowWidth - HorizontalInset * 2.0f, m_subtext);
+        if (strlen(m_text) > 5) DrawWindow(vg, m_text, x, y, window_width, window_height);
+        else DrawAlertWindow(vg, m_text, x, y, window_width, window_height);
+        DrawHeadline(vg, x + HorizontalInset, y + TitleGap, window_width - HorizontalInset * 2.0f, m_subtext);
 
         /* Draw the result if there is one. */
         if (R_FAILED(m_rc)) {
-            DrawHeadline(vg, x + HorizontalInset, y + TitleGap + SubTextHeight, WindowWidth - HorizontalInset * 2.0f, m_result_text);
+            DrawHeadline(vg, x + HorizontalInset, y + TitleGap + SubTextHeight, window_width - HorizontalInset * 2.0f, m_result_text);
         }
 
         this->DrawButtons(vg, ns);
@@ -371,13 +372,14 @@ namespace dbk {
 
     ErrorMenu::ErrorMenu(const char *text, const char *subtext, const char *format, u64 rc) : AlertMenu(nullptr, text, subtext, format, rc)  {
         const float window_height = WindowHeight + (R_FAILED(m_rc) ? SubTextHeight : 0.0f);
-        const float x = g_screen_width / 2.0f - WindowWidth / 2.0f;
+        const float window_width = std::max(WindowWidth, std::max(strlen(m_result_text), strlen(m_subtext)) * 12.0f + HorizontalInset * 2.f);
+        const float x = g_screen_width / 2.0f - window_width / 2.0f;
         const float y = g_screen_height / 2.0f - window_height / 2.0f;
         const float button_y = y + TitleGap + SubTextHeight + VerticalGap * 2.0f + (R_FAILED(m_rc) ? SubTextHeight : 0.0f);
-        const float button_width = (WindowWidth - HorizontalInset * 2.0f) / 2.0f - ButtonHorizontalGap;
+        const float button_width = (window_width - HorizontalInset * 2.0f) / 2.0f - ButtonHorizontalGap;
 
         /* Add buttons. */
-        this->AddButton(ExitButtonId, "Exit", x + WindowWidth / 2 - button_width / 2, button_y, button_width, ButtonHeight);
+        this->AddButton(ExitButtonId, "Exit", x + window_width / 2 - button_width / 2, button_y, button_width, ButtonHeight);
         this->SetButtonSelected(ExitButtonId, true);
     }
 
@@ -464,13 +466,9 @@ namespace dbk {
 
         case Error::GameWrongRevision:
             {
-                const char* ret = "Please update ACNH to the latest version!";
-#if DEBUG
-                const char* formatter = "current BID: 0x%016lX";
+                const char* ret = "ACNH version unknown! If you think this is an error,";
+                const char* formatter = "please report this BID: 0x%016lX";
                 ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret, formatter, bid));
-#else
-                ChangeMenu(std::make_shared<ErrorMenu>("\uE150", ret));
-#endif
             break;
             }
 
