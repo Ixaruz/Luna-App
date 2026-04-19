@@ -20,7 +20,8 @@ struct TemplateCheckResult {
 //define all valid save RevisionInfo here
 const std::vector<FileHeaderInfo*> RevisionInfo = std::vector<FileHeaderInfo*>{
     new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 31}, // 3.0.0
-new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 32}, // 3.0.1
+    new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 32}, // 3.0.1
+    new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 33}, // 3.0.2
 };
 
 class TemplateCheck {

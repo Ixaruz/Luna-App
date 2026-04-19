@@ -78,11 +78,13 @@ const std::map<u16, u16> TownfruitSmoothiesMap = {
 extern const std::vector<std::string> knownSupportedVersions = {
 	"3.0.0",
 	"3.0.1",
+	"3.0.2",
 };
 
 extern const std::vector<u64> VersionPointerOffset = {
 	0x5473020, //3.0.0
 	0x5473020, //3.0.1
+	0x5474040, //3.0.2
 };
 
 extern const std::vector<FileHashRegion*> REV_300_MAIN = std::vector<FileHashRegion*> {
