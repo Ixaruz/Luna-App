@@ -79,12 +79,15 @@ extern const std::vector<std::string> knownSupportedVersions = {
 	"3.0.0",
 	"3.0.1",
 	"3.0.2",
+	"3.0.3",
 };
 
+// this is the pointer to the game's global state object
 extern const std::vector<u64> VersionPointerOffset = {
 	0x5473020, //3.0.0
 	0x5473020, //3.0.1
 	0x5474040, //3.0.2
+	0x5474040, //3.0.3
 };
 
 extern const std::vector<FileHashRegion*> REV_300_MAIN = std::vector<FileHashRegion*> {
@@ -411,7 +414,7 @@ namespace util {
 					}
 					lastletter = currentletter;
 				}
-				//chouon deez nuts 
+				//chouon deez nuts
 				else if (namechar == 0x30FC && isJAP(lastchar)) {
 					name[i + currentoffset] = name[i + currentoffset - 1];
 
