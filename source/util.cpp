@@ -1,4 +1,5 @@
 #include "util.h"
+#include <helpers/findStateSingleton.hpp>
 
 extern const s64 SaveHeaderSize = 0x110;
 
@@ -75,20 +76,7 @@ const std::map<u16, u16> TownfruitSmoothiesMap = {
 	{2287, 0x384}, //cherry smoothie
 };
 
-extern const std::vector<std::string> knownSupportedVersions = {
-	"3.0.0",
-	"3.0.1",
-	"3.0.2",
-	"3.0.3",
-};
-
-// this is the pointer to the game's global state object
-extern const std::vector<u64> VersionPointerOffset = {
-	0x5473020, //3.0.0
-	0x5473020, //3.0.1
-	0x5474040, //3.0.2
-	0x5474040, //3.0.3
-};
+extern u64 gameStateAddress = NULL;
 
 extern const std::vector<FileHashRegion*> REV_300_MAIN = std::vector<FileHashRegion*> {
         new FileHashRegion(0x000110, 0x1e339c),
@@ -116,8 +104,6 @@ extern const std::vector<FileHashRegion*> REV_300_PERSONAL = std::vector<FileHas
 		new FileHashRegion(0x00110, 0x37acc),
 		new FileHashRegion(0x37be0, 0x3ce5c),
 };
-
-extern int versionindex = 0;
 
 static const char verboten[] = { ',', '/', '\\', '<', '>', ':', '"', '|', '?', '*', '\'', '!', '@', '#' };
 
@@ -341,14 +327,60 @@ static bool isKATAKANA(const u16& t) {
 }
 
 namespace util {
-	bool isVersionSupported(std::string const &versionString) {
-		auto p = std::find(knownSupportedVersions.begin(), knownSupportedVersions.end(), versionString);
-		if (p == knownSupportedVersions.end()) return false;
-		else {
-			versionindex = std::distance(knownSupportedVersions.begin(), p);
-			util::PrintToNXLink("current version: %s\n", versionString.c_str());
-			return true;
+
+	struct Version {
+		u8 major;
+		u8 minor;
+		u8 patch;
+
+		Version(u8 _major, u8 _minor, u8 _patch) : major(_major), minor(_minor), patch(_patch)
+		{}
+
+		Version(std::string s)
+		{
+			std::stringstream ss(s);
+			std::string segment;
+			std::vector<u8> seglist;
+
+			while (std::getline(ss, segment, '.')) {
+				try {
+					seglist.push_back(std::stoi(segment));
+				} catch (...) {
+					seglist.push_back(0);
+				}
+			}
+
+			if (seglist.size() != 3) {
+				major = minor = patch = 0;
+			}
+			else {
+				major = seglist[0];
+				minor = seglist[1];
+				patch = seglist[2];
+			}
 		}
+	};
+
+	u8 constexpr requiredMajorVersion = 3;
+	u8 constexpr requiredMinorVersion = 0;
+
+	bool isVersionSupported(std::string const &versionString) {
+		util::PrintToNXLink("current version: %s\n", versionString.c_str());
+		Version version(versionString);
+		if (version.major != requiredMajorVersion || version.minor != requiredMinorVersion) {
+			util::PrintToNXLink("Version Not Supported\n Required version: %d.%d.x\n", requiredMajorVersion, requiredMinorVersion);
+			return false;
+		}
+
+		Result rc = StateSingletonFinder::findStateSingleton(&gameStateAddress);
+		if (R_FAILED(rc)) {
+			util::PrintToNXLink("Error finding game state singleton: 0x%08X\n", rc);
+			return false;
+		}
+
+		util::PrintToNXLink("Found game state singleton at 0x%lX\n", gameStateAddress);
+
+		return true;
 	}
 
 	std::string getIslandNameASCII(u64 playerAddr)
@@ -497,36 +529,25 @@ namespace util {
 		return path.substr(slPos + 1, extPos);
 	}
 
-	u64 FollowPointerMain(u64 pointer, ...)
+	u64 FollowPointer(u64 pointer, ...)
 	{
-		u64 offset;
-		va_list pointers;
-		va_start(pointers, pointer);
+		u64 offset = 0;
+		va_list offsets;
+		va_start(offsets, pointer);
 
-		DmntCheatProcessMetadata metadata;
-		dmntchtGetCheatProcessMetadata(&metadata);
+		if (pointer == NULL) {
+			return NULL;
+		}
 
 		size_t bufferSize = sizeof offset;
-#if DEBUG
-		Result rc = 0;
-		if (R_FAILED(rc = dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize))) {
-			PrintToNXLink("Memory Read failed.\n");
-		}
-#else
-		dmntchtReadCheatProcessMemory(metadata.main_nso_extents.base + pointer, &offset, bufferSize); // since the inital pointer will be a valid offset(we assume anyways...) do a read64 call to it and store in offset
-#endif
-
-
-		//return 0xFFFFFFFFFFFFFFFF;
-		pointer = va_arg(pointers, u64); // go to next argument
-		while (pointer != 0xFFFFFFFFFFFFFFFF) // the last arg needs to be -1 in order for the while loop to exit
-		{
-			dmntchtReadCheatProcessMemory(pointer + offset, &offset, bufferSize);
-			//return 0xFFFFFFFFFFFFFFFF;
-			pointer = va_arg(pointers, u64);
-		}
-		va_end(pointers);
-		return offset;
+		do {
+			util::PrintToNXLink("Reading from: 0x%lX\n (pointer: 0x%lX, offset: 0x%lX)\n", pointer + offset, pointer, offset);
+			dmntchtReadCheatProcessMemory(pointer + offset, &pointer, bufferSize);
+			util::PrintToNXLink("Read next Pointer/Value: 0x%lX\n", pointer);
+			offset = va_arg(offsets, u64);
+		} while(offset != UINT64_MAX); // last offset has to be UINT64_MAX to end the loop (since we can't check for NULL)
+		va_end(offsets);
+		return pointer;
 	}
 
 	bool getFlag(unsigned char data[], int bitIndex)

@@ -502,7 +502,7 @@ namespace dbk {
         u16 IsDreamingBed = 0;
 
         //[[[[main+4BAEF28]+10]+130]+10]
-        u64 mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
+        u64 mainAddr = util::FollowPointer(gameStateAddress, 0x10, 0x130, 0x10, UINT64_MAX);
 
 
         TemplateCheck templatecheck;
@@ -956,7 +956,7 @@ namespace dbk {
                 isVersionSupported = util::isVersionSupported(control_data.nacp.display_version);
                 if(isVersionSupported) {
                     //[[[[main+4BAEF28]+10]+140]+08]
-                    u64 playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
+                    u64 playerAddr = util::FollowPointer(gameStateAddress, 0x10, 0x140, 0x08, UINT64_MAX);
                     islandDisplayName = util::getIslandNameASCII(playerAddr);
                 }
             }

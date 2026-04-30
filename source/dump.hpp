@@ -15,7 +15,7 @@ namespace Dump {
 		float g_progress_percent_last_function;
 		bool *g_enable_buttons;
 		dbk::DumpingMenu::DumpState *g_dumping_state;
-		
+
 		/* FS related */
 		std::string g_TemplateIn = std::string(LUNA_TEMPLATE_DIR);
 		std::string g_pathOut = std::string(LUNA_DUMP_DIR);
@@ -390,7 +390,7 @@ namespace Dump {
 		g_enable_buttons = enable_buttons;
 		g_dumping_state = dumping_state;
 		fsOpenSdCardFileSystem(&g_fsSdmc);
-		g_mainAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x130, 0x10, 0xFFFFFFFFFFFFFFFF);
+		g_mainAddr = util::FollowPointer(gameStateAddress, 0x10, 0x130, 0x10, UINT64_MAX);
 		if (g_mainAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: mainAddr");
 			util::PrintToNXLink("Error: mainAddr\n");
@@ -399,7 +399,7 @@ namespace Dump {
 			return;
 #endif
 		}
-		g_playerAddr = util::FollowPointerMain(VersionPointerOffset[versionindex], 0x10, 0x140, 0x08, 0xFFFFFFFFFFFFFFFF);
+		g_playerAddr = util::FollowPointer(gameStateAddress, 0x10, 0x140, 0x08, UINT64_MAX);
 		if (g_playerAddr == 0x00) {
 			g_dumping_menu->LogAddLine("Error: playerAddr");
 			util::PrintToNXLink("Error: playerAddr\n");

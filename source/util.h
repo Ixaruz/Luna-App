@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <cstring>
+#include <sstream>
 #include <vector>
 #include <cstdio>
 #include <algorithm>
@@ -62,10 +63,6 @@ extern const std::vector<u16> BeAChefRecipes;
 
 extern const std::map<u16, u16> TownfruitSmoothiesMap;
 
-extern const std::vector<std::string> knownSupportedVersions;
-
-extern const std::vector<u64> VersionPointerOffset;
-
 class FileHashRegion
 {
 public:
@@ -81,11 +78,11 @@ public:
 extern const std::vector<FileHashRegion*> REV_300_MAIN;
 extern const std::vector<FileHashRegion*> REV_300_PERSONAL;
 
+extern u64 gameStateAddress;
+
 struct IslandName {
     u16 name[0xB];
 };
-
-extern int versionindex;
 
 enum class Error {
     Success,
@@ -116,7 +113,7 @@ namespace util
 
     std::string getFilename(std::string& path);
 
-    u64 FollowPointerMain(u64 pointer, ...);
+    u64 FollowPointer(u64 pointer, ...);
 
     bool getFlag(unsigned char data[], int bitIndex);
 
@@ -127,7 +124,7 @@ namespace util
     void setBitBequalsA(u16 A, unsigned char* B, int bitIndexOffset);
 
     std::string GetLastTimeSaved(u64 mainAddr);
-    
+
     u32 GetWeatherRandomSeed(u64 mainAddr);
 
     bool isServiceRunning(const char* serviceName);
