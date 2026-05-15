@@ -17,13 +17,7 @@ struct TemplateCheckResult {
     std::string additional_info;
 };
 
-//define all valid save RevisionInfo here
-const std::vector<FileHeaderInfo*> RevisionInfo = std::vector<FileHeaderInfo*>{
-    new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 31}, // 3.0.0
-    new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 32}, // 3.0.1
-    new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 33}, // 3.0.2
-    new FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 34}, // 3.0.3
-};
+constexpr FileHeaderInfo headerInfo3_0_0 = FileHeaderInfo { /*Major*/ 0xA0002, /*Minor*/ 0xA0028, /*Unk1*/ 2, /*HeaderRevision*/ 0, /*Unk2*/ 2, /*SaveRevision*/ 31};
 
 class TemplateCheck {
 private:
@@ -70,7 +64,8 @@ public:
         FsFile check;
         u64 bytesread = 0;
 
-        static FileHeaderInfo checkDAT = { 0 };
+        static FileHeaderInfo checkDAT;
+        memset(&checkDAT, 0, sizeof(FileHeaderInfo));
 
         bool mainfound = false;
         bool correctRevision = false;
@@ -109,8 +104,10 @@ public:
                     std::snprintf(pathbuffer, FS_MAX_PATH, tobechecked.c_str());
                     fsFsOpenFile(&fsSdmc, pathbuffer, FsOpenMode_Read, &check);
                     fsFileRead(&check, 0, &checkDAT, sizeof(FileHeaderInfo), FsReadOption_None, &bytesread);
-                    for (auto& r : RevisionInfo) {
-                        if (memcmp(r, &checkDAT, sizeof(FileHeaderInfo)) == 0) correctRevision = true;
+                    // Just check major and minor version... I am not willing to keep updating this for every single update
+                    if (headerInfo3_0_0.Major == checkDAT.Major && headerInfo3_0_0.Minor == checkDAT.Minor)
+                    {
+                        correctRevision = true;
                     }
                     if (!correctRevision) {
                         result.error = Error::TemplateWrongRevision;
